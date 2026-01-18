@@ -7,20 +7,18 @@ import {
   FileText,
   Wallet,
   History,
-  Users,
   CheckSquare,
-  Settings,
   LogOut,
   Menu,
-  X,
   ChevronDown,
+  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  role: "company" | "regulator" | "admin";
+  role: "company" | "regulator";
 }
 
 const navItems = {
@@ -33,20 +31,14 @@ const navItems = {
   regulator: [
     { icon: LayoutDashboard, label: "Overview", href: "/dashboard/regulator" },
     { icon: CheckSquare, label: "Pending Reviews", href: "/dashboard/regulator/reviews" },
+    { icon: FileCheck, label: "Approved Reports", href: "/dashboard/regulator/approved" },
     { icon: History, label: "Audit Log", href: "/dashboard/regulator/audit" },
-  ],
-  admin: [
-    { icon: LayoutDashboard, label: "Overview", href: "/dashboard/admin" },
-    { icon: Users, label: "User Management", href: "/dashboard/admin/users" },
-    { icon: History, label: "Blockchain Explorer", href: "/dashboard/admin/explorer" },
-    { icon: Settings, label: "Settings", href: "/dashboard/admin/settings" },
   ],
 };
 
 const roleLabels = {
-  company: "Company Dashboard",
-  regulator: "Regulator Dashboard",
-  admin: "Admin Dashboard",
+  company: { title: "Company Dashboard", user: "Acme Corp" },
+  regulator: { title: "Regulator Dashboard", user: "EPA Verifier" },
 };
 
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
@@ -55,6 +47,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const items = navItems[role];
+  const roleInfo = roleLabels[role];
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,7 +70,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         <div className="p-4">
           <div className="mb-4 rounded-lg bg-muted p-3">
             <p className="text-xs font-medium text-muted-foreground">Logged in as</p>
-            <p className="text-sm font-semibold text-foreground">{roleLabels[role]}</p>
+            <p className="text-sm font-semibold text-foreground">{roleInfo.user}</p>
+            <p className="text-xs text-muted-foreground">{roleInfo.title}</p>
           </div>
 
           <nav className="space-y-1">
@@ -107,7 +101,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           <Button
             variant="ghost"
             className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
           >
             <LogOut className="h-5 w-5" />
             Sign Out
@@ -147,9 +141,11 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
             </div>
             <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-bold text-primary">JD</span>
+                <span className="text-xs font-bold text-primary">
+                  {role === "company" ? "AC" : "EP"}
+                </span>
               </div>
-              <span className="hidden sm:inline">John Doe</span>
+              <span className="hidden sm:inline">{roleInfo.user}</span>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
