@@ -25,14 +25,40 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-const credits: { 
-  id: string; 
-  amount: number; 
-  issuer: string; 
-  issuedDate: string; 
-  project: string;
-  status: "active" | "retired";
-}[] = [];
+const credits = [
+  { 
+    id: "CC-2024-001", 
+    amount: 100, 
+    issuer: "EPA Verified", 
+    issuedDate: "2024-01-10", 
+    project: "Solar Farm Initiative",
+    status: "active" as const 
+  },
+  { 
+    id: "CC-2024-002", 
+    amount: 250, 
+    issuer: "Gold Standard", 
+    issuedDate: "2024-01-08", 
+    project: "Reforestation Project",
+    status: "active" as const 
+  },
+  { 
+    id: "CC-2024-003", 
+    amount: 75, 
+    issuer: "Verra VCS", 
+    issuedDate: "2024-01-05", 
+    project: "Wind Energy Project",
+    status: "active" as const 
+  },
+  { 
+    id: "CC-2023-045", 
+    amount: 150, 
+    issuer: "EPA Verified", 
+    issuedDate: "2023-12-20", 
+    project: "Methane Capture",
+    status: "retired" as const 
+  },
+];
 
 export default function CreditWallet() {
   const [copiedId, setCopiedId] = useState<string | null>(null);

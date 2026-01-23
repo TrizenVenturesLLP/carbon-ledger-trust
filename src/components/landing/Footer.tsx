@@ -15,8 +15,26 @@ export function Footer() {
             </span>
           </div>
 
+          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+            <Link to="/" className="transition-colors hover:text-foreground">
+              Home
+            </Link>
+            <Link to="/login" className="transition-colors hover:text-foreground">
+              Login
+            </Link>
+            <a href="#" className="transition-colors hover:text-foreground">
+              Documentation
+            </a>
+            <a href="#" className="transition-colors hover:text-foreground">
+              API
+            </a>
+            <a href="#" className="transition-colors hover:text-foreground">
+              Contact
+            </a>
+          </nav>
+
           <p className="text-sm text-muted-foreground">
-            © 2026 CarbonLedger. Committed to sustainability.
+            © 2024 CarbonLedger. Committed to sustainability.
           </p>
         </div>
       </div>

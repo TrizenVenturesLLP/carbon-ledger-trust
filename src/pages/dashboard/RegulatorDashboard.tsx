@@ -30,29 +30,67 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-const pendingReviews: { 
-  id: string; 
-  company: string; 
-  title: string;
-  submitted: string;
-  credits: number;
-  priority: string;
-  description: string;
-  methodology: string;
-  baselineEmissions: number;
-  reportedEmissions: number;
-  documents: string[];
-}[] = [];
+const pendingReviews = [
+  { 
+    id: "RPT-004", 
+    company: "Acme Corp", 
+    title: "Q4 2023 Emission Reduction",
+    submitted: "2024-01-15",
+    credits: 150,
+    priority: "high",
+    description: "Emission reductions from solar panel installation and energy efficiency improvements at the main manufacturing facility.",
+    methodology: "GHG Protocol Corporate Standard",
+    baselineEmissions: 500,
+    reportedEmissions: 350,
+    documents: ["emission_data.pdf", "verification_report.pdf", "energy_audit.xlsx"],
+  },
+  { 
+    id: "RPT-005", 
+    company: "GreenTech Industries", 
+    title: "Wind Farm Installation",
+    submitted: "2024-01-14",
+    credits: 500,
+    priority: "medium",
+    description: "Installation of 10MW wind farm providing clean energy to the grid, displacing fossil fuel generation.",
+    methodology: "CDM ACM0002",
+    baselineEmissions: 2000,
+    reportedEmissions: 1500,
+    documents: ["project_design.pdf", "grid_connection_proof.pdf", "monitoring_report.xlsx"],
+  },
+  { 
+    id: "RPT-006", 
+    company: "EcoLogistics", 
+    title: "Fleet Conversion Project",
+    submitted: "2024-01-13",
+    credits: 200,
+    priority: "low",
+    description: "Conversion of 20 delivery vehicles from diesel to electric, reducing direct emissions from transportation.",
+    methodology: "GHG Protocol Mobile Sources",
+    baselineEmissions: 400,
+    reportedEmissions: 200,
+    documents: ["fleet_report.pdf", "fuel_consumption_logs.csv"],
+  },
+  { 
+    id: "RPT-007", 
+    company: "CleanAir Manufacturing", 
+    title: "Industrial Process Optimization",
+    submitted: "2024-01-12",
+    credits: 350,
+    priority: "high",
+    description: "Implementation of heat recovery systems and process optimization in cement manufacturing.",
+    methodology: "CDM AM0024",
+    baselineEmissions: 1200,
+    reportedEmissions: 850,
+    documents: ["process_documentation.pdf", "energy_flow_analysis.pdf"],
+  },
+];
 
-const recentActions: { 
-  id: string; 
-  action: string; 
-  report: string; 
-  company: string; 
-  credits?: number; 
-  timestamp: string; 
-  reason?: string;
-}[] = [];
+const recentActions = [
+  { id: "ACT-001", action: "Approved", report: "Solar Panel Installation", company: "SunPower Ltd", credits: 300, timestamp: "2024-01-15 10:30" },
+  { id: "ACT-002", action: "Rejected", report: "Carbon Capture Initiative", company: "FossilFree Inc", timestamp: "2024-01-14 16:45", reason: "Insufficient monitoring data" },
+  { id: "ACT-003", action: "Approved", report: "Reforestation Project", company: "GreenEarth NGO", credits: 1000, timestamp: "2024-01-14 09:15" },
+  { id: "ACT-004", action: "Approved", report: "Biogas Plant Operation", company: "AgriGreen Ltd", credits: 450, timestamp: "2024-01-13 14:20" },
+];
 
 export default function RegulatorDashboard() {
   const { toast } = useToast();

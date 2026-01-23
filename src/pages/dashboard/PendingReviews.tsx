@@ -29,19 +29,73 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-const allPendingReviews: { 
-  id: string; 
-  company: string; 
-  title: string;
-  submitted: string;
-  credits: number;
-  priority: string;
-  description: string;
-  methodology: string;
-  baselineEmissions: number;
-  reportedEmissions: number;
-  documents: string[];
-}[] = [];
+const allPendingReviews = [
+  { 
+    id: "RPT-004", 
+    company: "Acme Corp", 
+    title: "Q4 2023 Emission Reduction",
+    submitted: "2024-01-15",
+    credits: 150,
+    priority: "high",
+    description: "Emission reductions from solar panel installation and energy efficiency improvements.",
+    methodology: "GHG Protocol Corporate Standard",
+    baselineEmissions: 500,
+    reportedEmissions: 350,
+    documents: ["emission_data.pdf", "verification_report.pdf"],
+  },
+  { 
+    id: "RPT-005", 
+    company: "GreenTech Industries", 
+    title: "Wind Farm Installation",
+    submitted: "2024-01-14",
+    credits: 500,
+    priority: "medium",
+    description: "Installation of 10MW wind farm providing clean energy to the grid.",
+    methodology: "CDM ACM0002",
+    baselineEmissions: 2000,
+    reportedEmissions: 1500,
+    documents: ["project_design.pdf", "monitoring_report.xlsx"],
+  },
+  { 
+    id: "RPT-006", 
+    company: "EcoLogistics", 
+    title: "Fleet Conversion Project",
+    submitted: "2024-01-13",
+    credits: 200,
+    priority: "low",
+    description: "Conversion of 20 delivery vehicles from diesel to electric.",
+    methodology: "GHG Protocol Mobile Sources",
+    baselineEmissions: 400,
+    reportedEmissions: 200,
+    documents: ["fleet_report.pdf", "fuel_logs.csv"],
+  },
+  { 
+    id: "RPT-007", 
+    company: "CleanAir Manufacturing", 
+    title: "Industrial Process Optimization",
+    submitted: "2024-01-12",
+    credits: 350,
+    priority: "high",
+    description: "Heat recovery systems and process optimization in manufacturing.",
+    methodology: "CDM AM0024",
+    baselineEmissions: 1200,
+    reportedEmissions: 850,
+    documents: ["process_documentation.pdf"],
+  },
+  { 
+    id: "RPT-008", 
+    company: "BioEnergy Ltd", 
+    title: "Biogas Plant Expansion",
+    submitted: "2024-01-11",
+    credits: 280,
+    priority: "medium",
+    description: "Expansion of biogas production capacity from agricultural waste.",
+    methodology: "CDM AMS-III.D",
+    baselineEmissions: 600,
+    reportedEmissions: 320,
+    documents: ["biogas_report.pdf", "waste_analysis.xlsx"],
+  },
+];
 
 export default function PendingReviews() {
   const { toast } = useToast();

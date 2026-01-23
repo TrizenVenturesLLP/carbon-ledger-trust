@@ -26,18 +26,51 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const reports: { 
-  id: string; 
-  title: string; 
-  type: string;
-  submitted: string;
-  status: "pending" | "approved" | "rejected";
-  estimatedCredits: number;
-  issuedCredits?: number;
-  description: string;
-  documents: string[];
-  rejectionReason?: string;
-}[] = [];
+const reports = [
+  { 
+    id: "RPT-2024-001", 
+    title: "Q4 2023 Emission Reduction", 
+    type: "Quarterly Report",
+    submitted: "2024-01-10",
+    status: "pending" as const,
+    estimatedCredits: 150,
+    description: "Emission reductions from solar panel installation and energy efficiency improvements.",
+    documents: ["emission_data.pdf", "verification_report.pdf"],
+  },
+  { 
+    id: "RPT-2024-002", 
+    title: "Solar Panel Installation", 
+    type: "Project Report",
+    submitted: "2024-01-08",
+    status: "approved" as const,
+    estimatedCredits: 300,
+    issuedCredits: 300,
+    description: "Installation of 500kW solar panel system at main manufacturing facility.",
+    documents: ["project_documentation.pdf", "energy_audit.pdf"],
+  },
+  { 
+    id: "RPT-2024-003", 
+    title: "Fleet Electrification Phase 1", 
+    type: "Project Report",
+    submitted: "2024-01-05",
+    status: "rejected" as const,
+    estimatedCredits: 200,
+    description: "Conversion of 20 delivery vehicles to electric.",
+    documents: ["fleet_report.pdf"],
+    rejectionReason: "Insufficient baseline data. Please provide historical fuel consumption records.",
+  },
+  { 
+    id: "RPT-2023-045", 
+    title: "Methane Capture Initiative", 
+    type: "Project Report",
+    submitted: "2023-12-15",
+    status: "approved" as const,
+    estimatedCredits: 500,
+    issuedCredits: 475,
+    description: "Methane capture and utilization from wastewater treatment.",
+    documents: ["methane_report.pdf", "monitoring_data.xlsx"],
+  },
+];
 
 export default function EmissionReports() {
   const { toast } = useToast();
