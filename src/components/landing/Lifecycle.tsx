@@ -44,7 +44,7 @@ export function Lifecycle() {
             Carbon Credit Lifecycle
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            From emission reduction to permanent retirement, every step is verified and recorded on an immutable ledger.
+            This platform verifies and records every step from emission reduction to permanent retirement on an immutable ledger.
           </p>
         </motion.div>
 

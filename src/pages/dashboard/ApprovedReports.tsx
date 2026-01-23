@@ -15,52 +15,17 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const approvedReports = [
-  { 
-    id: "RPT-2024-002", 
-    company: "Acme Corp",
-    title: "Solar Panel Installation", 
-    approvedDate: "2024-01-12",
-    submittedDate: "2024-01-08",
-    issuedCredits: 300,
-    txHash: "0x1a2b3c4d5e6f7890abcdef1234567890abcdef12",
-    blockNumber: 18234567,
-    verifier: "John Smith",
-  },
-  { 
-    id: "RPT-2024-001", 
-    company: "GreenTech Industries",
-    title: "Wind Farm Phase 2", 
-    approvedDate: "2024-01-11",
-    submittedDate: "2024-01-05",
-    issuedCredits: 750,
-    txHash: "0x2b3c4d5e6f7890abcdef1234567890abcdef1234",
-    blockNumber: 18234400,
-    verifier: "Jane Doe",
-  },
-  { 
-    id: "RPT-2023-098", 
-    company: "SunPower Ltd",
-    title: "Rooftop Solar Network", 
-    approvedDate: "2024-01-08",
-    submittedDate: "2024-01-02",
-    issuedCredits: 450,
-    txHash: "0x3c4d5e6f7890abcdef1234567890abcdef123456",
-    blockNumber: 18234200,
-    verifier: "John Smith",
-  },
-  { 
-    id: "RPT-2023-095", 
-    company: "GreenEarth NGO",
-    title: "Reforestation Project", 
-    approvedDate: "2024-01-05",
-    submittedDate: "2023-12-28",
-    issuedCredits: 1000,
-    txHash: "0x4d5e6f7890abcdef1234567890abcdef12345678",
-    blockNumber: 18234000,
-    verifier: "Jane Doe",
-  },
-];
+const approvedReports: { 
+  id: string; 
+  company: string;
+  title: string; 
+  approvedDate: string;
+  submittedDate: string;
+  issuedCredits: number;
+  txHash: string;
+  blockNumber: number;
+  verifier: string;
+}[] = [];
 
 export default function ApprovedReports() {
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
