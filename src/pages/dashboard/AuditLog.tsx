@@ -21,71 +21,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const auditLogs = [
-  { 
-    id: "LOG-001",
-    action: "approved",
-    reportId: "RPT-2024-002",
-    reportTitle: "Solar Panel Installation",
-    company: "Acme Corp",
-    credits: 300,
-    verifier: "John Smith",
-    timestamp: "2024-01-15 10:30:45",
-    notes: "All documentation verified. Baseline calculations confirmed.",
-  },
-  { 
-    id: "LOG-002",
-    action: "rejected",
-    reportId: "RPT-2024-003",
-    reportTitle: "Carbon Capture Initiative",
-    company: "FossilFree Inc",
-    verifier: "Jane Doe",
-    timestamp: "2024-01-14 16:45:22",
-    notes: "Insufficient monitoring data provided. Requested additional sensor readings.",
-  },
-  { 
-    id: "LOG-003",
-    action: "approved",
-    reportId: "RPT-2024-001",
-    reportTitle: "Reforestation Project",
-    company: "GreenEarth NGO",
-    credits: 1000,
-    verifier: "John Smith",
-    timestamp: "2024-01-14 09:15:10",
-    notes: "Satellite imagery and ground surveys verified. Credits issued as per Gold Standard methodology.",
-  },
-  { 
-    id: "LOG-004",
-    action: "approved",
-    reportId: "RPT-2023-098",
-    reportTitle: "Biogas Plant Operation",
-    company: "AgriGreen Ltd",
-    credits: 450,
-    verifier: "Jane Doe",
-    timestamp: "2024-01-13 14:20:33",
-    notes: "Methane capture rates confirmed via flow meters. Third-party audit completed.",
-  },
-  { 
-    id: "LOG-005",
-    action: "reviewed",
-    reportId: "RPT-2024-004",
-    reportTitle: "Wind Farm Installation",
-    company: "GreenTech Industries",
-    verifier: "John Smith",
-    timestamp: "2024-01-13 11:05:18",
-    notes: "Initial review completed. Requested clarification on grid connection dates.",
-  },
-  { 
-    id: "LOG-006",
-    action: "rejected",
-    reportId: "RPT-2023-095",
-    reportTitle: "Emission Reduction Claims",
-    company: "QuickCarbon Ltd",
-    verifier: "Jane Doe",
-    timestamp: "2024-01-12 15:30:00",
-    notes: "Baseline data inconsistent with industry standards. Methodology not recognized.",
-  },
-];
+const auditLogs: { 
+  id: string;
+  action: string;
+  reportId: string;
+  reportTitle: string;
+  company: string;
+  credits?: number;
+  verifier: string;
+  timestamp: string;
+  notes: string;
+}[] = [];
 
 type ActionFilter = "all" | "approved" | "rejected" | "reviewed";
 

@@ -6,17 +6,9 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const recentTransactions = [
-  { id: "TXN-001", type: "received", amount: 150, from: "GreenTech Corp", date: "2024-01-15", hash: "0x1a2b...3c4d" },
-  { id: "TXN-002", type: "retired", amount: 50, date: "2024-01-14", hash: "0x5e6f...7g8h" },
-  { id: "TXN-003", type: "sent", amount: 75, to: "EcoIndustries", date: "2024-01-12", hash: "0x9i0j...1k2l" },
-];
+const recentTransactions: { id: string; type: string; amount: number; from?: string; to?: string; date: string; hash: string }[] = [];
 
-const pendingReports = [
-  { id: "RPT-001", title: "Q4 2023 Emission Reduction", submitted: "2024-01-10", status: "pending" as const },
-  { id: "RPT-002", title: "Solar Panel Installation", submitted: "2024-01-08", status: "approved" as const },
-  { id: "RPT-003", title: "Fleet Electrification", submitted: "2024-01-05", status: "rejected" as const },
-];
+const pendingReports: { id: string; title: string; submitted: string; status: "pending" | "approved" | "rejected" }[] = [];
 
 export default function CompanyDashboard() {
   return (

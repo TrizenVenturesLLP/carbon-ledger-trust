@@ -204,12 +204,6 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-sm text-white/60">
-          Don't have an account?{" "}
-          <Link to="/login" className="text-accent hover:underline">
-            Contact us
-          </Link>
-        </p>
       </motion.div>
     </div>
   );
