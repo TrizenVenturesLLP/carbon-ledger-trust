@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 type Role = "company" | "regulator";
 
@@ -33,39 +34,43 @@ const roles = [
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [searchParams] = useSearchParams();
   const initialRole = (searchParams.get("role") as Role) || "company";
   
   const [selectedRole, setSelectedRole] = useState<Role>(initialRole);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const selectedRoleData = roles.find(r => r.id === selectedRole);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check demo credentials
-    const role = roles.find(r => r.id === selectedRole);
-    if (role && email === role.demoEmail && password === role.demoPassword) {
+    setIsLoading(true);
+
+    try {
+      await login(email, password);
       toast({
         title: "Login Successful",
-        description: `Welcome to the ${role.title} Dashboard`,
+        description: "Welcome to your dashboard",
       });
-      navigate(`/dashboard/${selectedRole}`);
-    } else if (email && password) {
-      // Allow any credentials for demo purposes
+      
+      // Navigate based on role
+      const role = selectedRole;
+      if (role === "company") {
+        navigate("/dashboard/company/reports");
+      } else {
+        navigate("/dashboard/regulator/reviews");
+      }
+    } catch (error: any) {
       toast({
-        title: "Login Successful",
-        description: `Welcome to the ${selectedRole} Dashboard`,
-      });
-      navigate(`/dashboard/${selectedRole}`);
-    } else {
-      toast({
-        title: "Invalid Credentials",
-        description: "Please enter valid email and password",
+        title: "Login Failed",
+        description: error.response?.data?.error || "Invalid credentials",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -182,8 +187,8 @@ export default function Login() {
                 />
               </div>
 
-              <Button type="submit" variant="hero" className="w-full" size="lg">
-                Sign In
+              <Button type="submit" variant="hero" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
@@ -204,12 +209,12 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        {/* <p className="mt-6 text-center text-sm text-white/60">
+        <p className="mt-6 text-center text-sm text-white/60">
           Don't have an account?{" "}
-          <Link to="/login" className="text-accent hover:underline">
-            Contact us
+          <Link to="/signup" className="text-accent hover:underline">
+            Sign Up
           </Link>
-        </p> */}
+        </p>
       </motion.div>
     </div>
   );

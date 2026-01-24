@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { 
   CheckCircle, 
   XCircle, 
@@ -20,17 +21,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const auditLogs = [];
+import { auditApi, AuditLog as AuditLogType } from "@/api/audit.api";
+import { format } from "date-fns";
 
 type ActionFilter = "all" | "approved" | "rejected" | "reviewed";
 
 export default function AuditLog() {
   const [filter, setFilter] = useState<ActionFilter>("all");
 
-  const filteredLogs = filter === "all" 
-    ? auditLogs 
-    : auditLogs.filter(log => log.action === filter);
+  // Fetch audit logs
+  const { data: auditLogs = [], isLoading } = useQuery({
+    queryKey: ['auditLogs', filter],
+    queryFn: () => auditApi.getAuditLogs(filter === "all" ? undefined : filter),
+  });
+
+  // Fetch stats
+  const { data: stats } = useQuery({
+    queryKey: ['auditStats'],
+    queryFn: auditApi.getAuditStats,
+  });
+
+  const filteredLogs = auditLogs;
 
   const getActionIcon = (action: string) => {
     switch (action) {
@@ -92,7 +103,7 @@ export default function AuditLog() {
                   <FileText className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{auditLogs.length}</p>
+                  <p className="text-2xl font-bold">{stats?.total || 0}</p>
                   <p className="text-xs text-muted-foreground">Total Actions</p>
                 </div>
               </div>
@@ -105,7 +116,7 @@ export default function AuditLog() {
                   <CheckCircle className="h-5 w-5 text-success" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{auditLogs.filter(l => l.action === "approved").length}</p>
+                  <p className="text-2xl font-bold">{stats?.approved || 0}</p>
                   <p className="text-xs text-muted-foreground">Approved</p>
                 </div>
               </div>
@@ -118,7 +129,7 @@ export default function AuditLog() {
                   <XCircle className="h-5 w-5 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{auditLogs.filter(l => l.action === "rejected").length}</p>
+                  <p className="text-2xl font-bold">{stats?.rejected || 0}</p>
                   <p className="text-xs text-muted-foreground">Rejected</p>
                 </div>
               </div>
@@ -132,7 +143,7 @@ export default function AuditLog() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
-                    {auditLogs.filter(l => l.credits).reduce((sum, l) => sum + (l.credits || 0), 0).toLocaleString()}
+                    {(stats?.creditsIssued || 0).toLocaleString()}
                   </p>
                   <p className="text-xs text-muted-foreground">Credits Issued</p>
                 </div>

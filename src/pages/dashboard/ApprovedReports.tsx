@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { 
   CheckCircle, 
   FileText, 
@@ -14,11 +15,18 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-const approvedReports = [];
+import { reviewsApi } from "@/api/reviews.api";
+import { EmissionReport } from "@/api/reports.api";
+import { format } from "date-fns";
 
 export default function ApprovedReports() {
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
+
+  // Fetch approved reports
+  const { data: approvedReports = [], isLoading } = useQuery({
+    queryKey: ['approvedReports'],
+    queryFn: reviewsApi.getApprovedReports,
+  });
 
   const handleCopyHash = (hash: string) => {
     navigator.clipboard.writeText(hash);
@@ -26,7 +34,11 @@ export default function ApprovedReports() {
     setTimeout(() => setCopiedHash(null), 2000);
   };
 
-  const totalCreditsIssued = approvedReports.reduce((sum, r) => sum + r.issuedCredits, 0);
+  const totalCreditsIssued = approvedReports.reduce((sum: number, r: EmissionReport) => sum + (r.issuedCredits || 0), 0);
+  const uniqueCompanies = new Set(approvedReports.map((r: EmissionReport) => {
+    const company = r.companyId as any;
+    return company?.email || company?._id;
+  })).size;
 
   return (
     <DashboardLayout role="regulator">
@@ -76,7 +88,7 @@ export default function ApprovedReports() {
                   <Building className="h-5 w-5 text-secondary-foreground" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">4</p>
+                  <p className="text-2xl font-bold">{uniqueCompanies}</p>
                   <p className="text-xs text-muted-foreground">Companies Verified</p>
                 </div>
               </div>

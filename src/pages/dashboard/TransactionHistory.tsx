@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 
   ArrowUpRight, 
@@ -21,8 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const transactions = [];
+import { transactionsApi, Transaction } from "@/api/transactions.api";
+import { format } from "date-fns";
 
 type TransactionType = "all" | "issued" | "received" | "sent" | "retired";
 
@@ -30,15 +31,19 @@ export default function TransactionHistory() {
   const [filter, setFilter] = useState<TransactionType>("all");
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
 
+  // Fetch transactions
+  const { data: transactions = [], isLoading } = useQuery({
+    queryKey: ['transactions', filter],
+    queryFn: () => transactionsApi.getTransactions(filter === "all" ? undefined : filter),
+  });
+
   const handleCopyHash = (hash: string) => {
     navigator.clipboard.writeText(hash);
     setCopiedHash(hash);
     setTimeout(() => setCopiedHash(null), 2000);
   };
 
-  const filteredTransactions = filter === "all" 
-    ? transactions 
-    : transactions.filter(tx => tx.type === filter);
+  const filteredTransactions = transactions;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -123,79 +128,94 @@ export default function TransactionHistory() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((tx, index) => (
-                <motion.div
-                  key={tx.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
-                >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className={`rounded-xl p-3 ${getTypeColor(tx.type)}`}>
-                        {getIcon(tx.type)}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase text-muted-foreground">
-                            {tx.type}
-                          </span>
-                          <span className="text-xs text-muted-foreground">{tx.id}</span>
-                        </div>
-                        <p className="font-medium text-foreground">
-                          {tx.type === "issued" && `Credits issued from ${tx.counterparty}`}
-                          {tx.type === "received" && `Received from ${tx.counterparty}`}
-                          {tx.type === "sent" && `Sent to ${tx.counterparty}`}
-                          {tx.type === "retired" && `Credits retired: ${tx.reason}`}
-                        </p>
-                        {tx.project && (
-                          <p className="text-sm text-muted-foreground">Project: {tx.project}</p>
-                        )}
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{tx.date} at {tx.time}</span>
-                          <span>•</span>
-                          <span>Block #{tx.blockNumber}</span>
-                        </div>
-                      </div>
-                    </div>
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-muted-foreground">Loading transactions...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((tx: Transaction, index: number) => {
+                    const fromUser = tx.fromUserId as any;
+                    const toUser = tx.toUserId as any;
+                    
+                    return (
+                      <motion.div
+                        key={tx._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex items-start gap-4">
+                            <div className={`rounded-xl p-3 ${getTypeColor(tx.type)}`}>
+                              {getIcon(tx.type)}
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase text-muted-foreground">
+                                  {tx.type}
+                                </span>
+                                <span className="text-xs text-muted-foreground">{tx.transactionId}</span>
+                              </div>
+                              <p className="font-medium text-foreground">
+                                {tx.type === "issued" && `Credits issued`}
+                                {tx.type === "received" && `Received from ${toUser?.companyName || toUser?.email || 'Unknown'}`}
+                                {tx.type === "sent" && `Sent to ${toUser?.companyName || toUser?.email || 'Unknown'}`}
+                                {tx.type === "retired" && `Credits retired${tx.retirementReason ? `: ${tx.retirementReason}` : ''}`}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span>{format(new Date(tx.createdAt), "MMM dd, yyyy 'at' HH:mm")}</span>
+                                {tx.blockNumber && (
+                                  <>
+                                    <span>•</span>
+                                    <span>Block #{tx.blockNumber}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
-                    <div className="flex flex-col items-end gap-2 lg:items-end">
-                      <p className={`text-xl font-bold ${getAmountColor(tx.type)}`}>
-                        {getAmountPrefix(tx.type)}{tx.amount} tCO₂e
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="max-w-[150px] truncate font-mono text-xs text-muted-foreground">
-                          {tx.hash}
-                        </span>
-                        <button
-                          onClick={() => handleCopyHash(tx.hash)}
-                          className="rounded p-1 hover:bg-muted"
-                        >
-                          {copiedHash === tx.hash ? (
-                            <Check className="h-3 w-3 text-success" />
-                          ) : (
-                            <Copy className="h-3 w-3 text-muted-foreground" />
-                          )}
-                        </button>
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 px-2">
-                          <ExternalLink className="h-3 w-3" />
-                          Verify
-                        </Button>
-                      </div>
-                    </div>
+                          <div className="flex flex-col items-end gap-2 lg:items-end">
+                            <p className={`text-xl font-bold ${getAmountColor(tx.type)}`}>
+                              {getAmountPrefix(tx.type)}{tx.amount} tCO₂e
+                            </p>
+                            {tx.blockchainTxHash && (
+                              <div className="flex items-center gap-2">
+                                <span className="max-w-[150px] truncate font-mono text-xs text-muted-foreground">
+                                  {tx.blockchainTxHash}
+                                </span>
+                                <button
+                                  onClick={() => handleCopyHash(tx.blockchainTxHash!)}
+                                  className="rounded p-1 hover:bg-muted"
+                                >
+                                  {copiedHash === tx.blockchainTxHash ? (
+                                    <Check className="h-3 w-3 text-success" />
+                                  ) : (
+                                    <Copy className="h-3 w-3 text-muted-foreground" />
+                                  )}
+                                </button>
+                                <Button variant="ghost" size="sm" className="h-7 gap-1 px-2">
+                                  <ExternalLink className="h-3 w-3" />
+                                  Verify
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Coins className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No transactions found</p>
                   </div>
-                </motion.div>
-              ))
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Coins className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No transactions found</p>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

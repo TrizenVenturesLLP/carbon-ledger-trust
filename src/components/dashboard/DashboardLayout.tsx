@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -36,18 +37,24 @@ const navItems = {
   ],
 };
 
-const roleLabels = {
-  company: { title: "Company Dashboard", user: "Acme Corp" },
-  regulator: { title: "Regulator Dashboard", user: "EPA Verifier" },
-};
-
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const items = navItems[role];
-  const roleInfo = roleLabels[role];
+  
+  const getUserDisplayName = () => {
+    if (user?.companyName) return user.companyName;
+    if (user?.email) return user.email.split('@')[0];
+    return role === "company" ? "Company" : "Regulator";
+  };
+
+  const getUserInitials = () => {
+    const name = getUserDisplayName();
+    return name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,8 +77,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         <div className="p-4">
           <div className="mb-4 rounded-lg bg-muted p-3">
             <p className="text-xs font-medium text-muted-foreground">Logged in as</p>
-            <p className="text-sm font-semibold text-foreground">{roleInfo.user}</p>
-            <p className="text-xs text-muted-foreground">{roleInfo.title}</p>
+            <p className="text-sm font-semibold text-foreground">{getUserDisplayName()}</p>
+            <p className="text-xs text-muted-foreground">{role === "company" ? "Company Dashboard" : "Regulator Dashboard"}</p>
           </div>
 
           <nav className="space-y-1">
@@ -101,7 +108,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           <Button
             variant="ghost"
             className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate("/login")}
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
           >
             <LogOut className="h-5 w-5" />
             Sign Out
@@ -142,10 +152,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
             <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-xs font-bold text-primary">
-                  {role === "company" ? "AC" : "EP"}
+                  {getUserInitials()}
                 </span>
               </div>
-              <span className="hidden sm:inline">{roleInfo.user}</span>
+              <span className="hidden sm:inline">{getUserDisplayName()}</span>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>

@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -29,36 +30,28 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-
-const pendingReviews = [];
-
-const recentActions = [];
+import { useNavigate } from "react-router-dom";
+import { reviewsApi } from "@/api/reviews.api";
+import { auditApi } from "@/api/audit.api";
+import { EmissionReport } from "@/api/reports.api";
+import { format } from "date-fns";
 
 export default function RegulatorDashboard() {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedReview, setSelectedReview] = useState<typeof pendingReviews[0] | null>(null);
-  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState("");
 
-  const handleApprove = () => {
-    toast({
-      title: "Report Approved",
-      description: `${selectedReview?.credits} carbon credits have been issued to ${selectedReview?.company}`,
-    });
-    setReviewDialogOpen(false);
-  };
+  // Fetch data
+  const { data: pendingReviews = [] } = useQuery({
+    queryKey: ['pendingReviews'],
+    queryFn: reviewsApi.getPendingReviews,
+  });
 
-  const handleReject = () => {
-    toast({
-      title: "Report Rejected",
-      description: `Feedback has been sent to ${selectedReview?.company}`,
-      variant: "destructive",
-    });
-    setRejectDialogOpen(false);
-    setReviewDialogOpen(false);
-    setRejectionReason("");
-  };
+  const { data: auditLogs = [] } = useQuery({
+    queryKey: ['auditLogs'],
+    queryFn: () => auditApi.getAuditLogs(),
+  });
+
+  const recentActions = auditLogs.slice(0, 4);
 
   return (
     <DashboardLayout role="regulator">
@@ -77,26 +70,26 @@ export default function RegulatorDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Pending Reviews"
-            value={pendingReviews.length}
+            value={pendingReviews.length.toString()}
             subtitle="Reports awaiting review"
             icon={Clock}
           />
           <StatCard
             title="Approved This Month"
-            value="47"
-            subtitle="Credits: 15,200 tCO₂e"
+            value={auditLogs.filter((l: any) => l.action === "approved").length.toString()}
+            subtitle="Reports approved"
             icon={CheckCircle}
           />
           <StatCard
             title="Rejected This Month"
-            value="5"
+            value={auditLogs.filter((l: any) => l.action === "rejected").length.toString()}
             subtitle="Sent back for revision"
             icon={XCircle}
           />
           <StatCard
             title="Total Credits Issued"
-            value="125K"
-            subtitle="All time"
+            value={auditLogs.reduce((sum: number, l: any) => sum + (l.creditsIssued || 0), 0).toLocaleString()}
+            subtitle="tCO₂e"
             icon={FileCheck}
           />
         </div>
@@ -112,61 +105,50 @@ export default function RegulatorDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {pendingReviews.length > 0 ? (
-                  pendingReviews.map((review, index) => (
-                    <motion.div
-                      key={review.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="rounded-lg border border-border bg-card p-4"
-                    >
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-start gap-3">
-                          <div className={`mt-1 rounded-full p-2 ${
-                            review.priority === "high" ? "bg-destructive/10" :
-                            review.priority === "medium" ? "bg-warning/10" : "bg-muted"
-                          }`}>
-                            <FileText className={`h-4 w-4 ${
-                              review.priority === "high" ? "text-destructive" :
-                              review.priority === "medium" ? "text-warning" : "text-muted-foreground"
-                            }`} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-foreground">{review.title}</p>
-                              {review.priority === "high" && (
-                                <StatusBadge status="rejected" icon={<AlertCircle className="h-3 w-3" />}>
-                                  High Priority
-                                </StatusBadge>
-                              )}
+                  pendingReviews.slice(0, 3).map((review: EmissionReport, index: number) => {
+                    const company = review.companyId as any;
+                    return (
+                      <motion.div
+                        key={review._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="rounded-lg border border-border bg-card p-4"
+                      >
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1 rounded-full p-2 bg-warning/10">
+                              <FileText className="h-4 w-4 text-warning" />
                             </div>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Building className="h-3 w-3" />
-                              {review.company}
-                            </p>
-                            <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                              <span>ID: {review.id}</span>
-                              <span>•</span>
-                              <span>Submitted: {review.submitted}</span>
-                              <span>•</span>
-                              <span className="font-medium text-foreground">{review.credits} tCO₂e</span>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-foreground">{review.title}</p>
+                              </div>
+                              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Building className="h-3 w-3" />
+                                {company?.companyName || company?.email || 'Unknown Company'}
+                              </p>
+                              <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                                <span>ID: {review.reportId}</span>
+                                <span>•</span>
+                                <span>Submitted: {format(new Date(review.submittedAt), "MMM dd, yyyy")}</span>
+                                <span>•</span>
+                                <span className="font-medium text-foreground">{review.estimatedCredits} tCO₂e</span>
+                              </div>
                             </div>
                           </div>
+                          <Button 
+                            size="sm" 
+                            className="gap-1"
+                            onClick={() => navigate("/dashboard/regulator/reviews")}
+                          >
+                            <Eye className="h-3 w-3" />
+                            Review
+                          </Button>
                         </div>
-                        <Button 
-                          size="sm" 
-                          className="gap-1"
-                          onClick={() => {
-                            setSelectedReview(review);
-                            setReviewDialogOpen(true);
-                          }}
-                        >
-                          <Eye className="h-3 w-3" />
-                          Review
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))
+                      </motion.div>
+                    );
+                  })
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <FileCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -186,31 +168,31 @@ export default function RegulatorDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {recentActions.length > 0 ? (
-                  recentActions.map((action, index) => (
+                  recentActions.map((action: any, index: number) => (
                     <motion.div
-                      key={action.id}
+                      key={action._id}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
                       className="border-b border-border pb-4 last:border-0 last:pb-0"
                     >
                       <div className="flex items-start gap-2">
-                        {action.action === "Approved" ? (
+                        {action.action === "approved" ? (
                           <CheckCircle className="mt-0.5 h-4 w-4 text-success" />
                         ) : (
                           <XCircle className="mt-0.5 h-4 w-4 text-destructive" />
                         )}
                         <div className="flex-1">
                           <p className="text-sm font-medium text-foreground">
-                            {action.action} "{action.report}"
+                            {action.action.charAt(0).toUpperCase() + action.action.slice(1)} "{action.reportTitle}"
                           </p>
-                          <p className="text-xs text-muted-foreground">{action.company}</p>
-                          {action.credits && (
+                          <p className="text-xs text-muted-foreground">{action.companyName}</p>
+                          {action.creditsIssued && (
                             <p className="text-xs font-medium text-success">
-                              +{action.credits} credits issued
+                              +{action.creditsIssued} credits issued
                             </p>
                           )}
-                          <p className="mt-1 text-xs text-muted-foreground">{action.timestamp}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{format(new Date(action.timestamp), "MMM dd, yyyy 'at' HH:mm")}</p>
                         </div>
                       </div>
                     </motion.div>
