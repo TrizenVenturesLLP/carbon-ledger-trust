@@ -6,17 +6,9 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const recentTransactions = [
-  { id: "TXN-001", type: "received", amount: 150, from: "GreenTech Corp", date: "2024-01-15", hash: "0x1a2b...3c4d" },
-  { id: "TXN-002", type: "retired", amount: 50, date: "2024-01-14", hash: "0x5e6f...7g8h" },
-  { id: "TXN-003", type: "sent", amount: 75, to: "EcoIndustries", date: "2024-01-12", hash: "0x9i0j...1k2l" },
-];
+const recentTransactions = [];
 
-const pendingReports = [
-  { id: "RPT-001", title: "Q4 2023 Emission Reduction", submitted: "2024-01-10", status: "pending" as const },
-  { id: "RPT-002", title: "Solar Panel Installation", submitted: "2024-01-08", status: "approved" as const },
-  { id: "RPT-003", title: "Fleet Electrification", submitted: "2024-01-05", status: "rejected" as const },
-];
+const pendingReports = [];
 
 export default function CompanyDashboard() {
   return (
@@ -77,47 +69,54 @@ export default function CompanyDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentTransactions.map((tx, index) => (
-                  <motion.div
-                    key={tx.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`rounded-full p-2 ${
-                        tx.type === "received" ? "bg-success/10" : 
-                        tx.type === "sent" ? "bg-info/10" : "bg-muted"
-                      }`}>
-                        {tx.type === "received" ? (
-                          <ArrowDownLeft className="h-4 w-4 text-success" />
-                        ) : tx.type === "sent" ? (
-                          <ArrowUpRight className="h-4 w-4 text-info" />
-                        ) : (
-                          <Coins className="h-4 w-4 text-muted-foreground" />
-                        )}
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((tx, index) => (
+                    <motion.div
+                      key={tx.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`rounded-full p-2 ${
+                          tx.type === "received" ? "bg-success/10" : 
+                          tx.type === "sent" ? "bg-info/10" : "bg-muted"
+                        }`}>
+                          {tx.type === "received" ? (
+                            <ArrowDownLeft className="h-4 w-4 text-success" />
+                          ) : tx.type === "sent" ? (
+                            <ArrowUpRight className="h-4 w-4 text-info" />
+                          ) : (
+                            <Coins className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {tx.type === "received" && `Received from ${tx.from}`}
+                            {tx.type === "sent" && `Sent to ${tx.to}`}
+                            {tx.type === "retired" && "Credits Retired"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{tx.date}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {tx.type === "received" && `Received from ${tx.from}`}
-                          {tx.type === "sent" && `Sent to ${tx.to}`}
-                          {tx.type === "retired" && "Credits Retired"}
+                      <div className="text-right">
+                        <p className={`text-sm font-semibold ${
+                          tx.type === "received" ? "text-success" : 
+                          tx.type === "sent" ? "text-info" : "text-muted-foreground"
+                        }`}>
+                          {tx.type === "received" ? "+" : tx.type === "sent" ? "-" : ""}{tx.amount} tCO₂e
                         </p>
-                        <p className="text-xs text-muted-foreground">{tx.date}</p>
+                        <p className="text-xs font-mono text-muted-foreground">{tx.hash}</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-semibold ${
-                        tx.type === "received" ? "text-success" : 
-                        tx.type === "sent" ? "text-info" : "text-muted-foreground"
-                      }`}>
-                        {tx.type === "received" ? "+" : tx.type === "sent" ? "-" : ""}{tx.amount} tCO₂e
-                      </p>
-                      <p className="text-xs font-mono text-muted-foreground">{tx.hash}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Coins className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No recent transactions</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -130,28 +129,35 @@ export default function CompanyDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {pendingReports.map((report, index) => (
-                  <motion.div
-                    key={report.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-full bg-primary/10 p-2">
-                        <FileText className="h-4 w-4 text-primary" />
+                {pendingReports.length > 0 ? (
+                  pendingReports.map((report, index) => (
+                    <motion.div
+                      key={report.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-primary/10 p-2">
+                          <FileText className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{report.title}</p>
+                          <p className="text-xs text-muted-foreground">Submitted: {report.submitted}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{report.title}</p>
-                        <p className="text-xs text-muted-foreground">Submitted: {report.submitted}</p>
-                      </div>
-                    </div>
-                    <StatusBadge status={report.status}>
-                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                    </StatusBadge>
-                  </motion.div>
-                ))}
+                      <StatusBadge status={report.status}>
+                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                      </StatusBadge>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No emission reports</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

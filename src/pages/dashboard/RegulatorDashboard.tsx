@@ -30,67 +30,9 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-const pendingReviews = [
-  { 
-    id: "RPT-004", 
-    company: "Acme Corp", 
-    title: "Q4 2023 Emission Reduction",
-    submitted: "2024-01-15",
-    credits: 150,
-    priority: "high",
-    description: "Emission reductions from solar panel installation and energy efficiency improvements at the main manufacturing facility.",
-    methodology: "GHG Protocol Corporate Standard",
-    baselineEmissions: 500,
-    reportedEmissions: 350,
-    documents: ["emission_data.pdf", "verification_report.pdf", "energy_audit.xlsx"],
-  },
-  { 
-    id: "RPT-005", 
-    company: "GreenTech Industries", 
-    title: "Wind Farm Installation",
-    submitted: "2024-01-14",
-    credits: 500,
-    priority: "medium",
-    description: "Installation of 10MW wind farm providing clean energy to the grid, displacing fossil fuel generation.",
-    methodology: "CDM ACM0002",
-    baselineEmissions: 2000,
-    reportedEmissions: 1500,
-    documents: ["project_design.pdf", "grid_connection_proof.pdf", "monitoring_report.xlsx"],
-  },
-  { 
-    id: "RPT-006", 
-    company: "EcoLogistics", 
-    title: "Fleet Conversion Project",
-    submitted: "2024-01-13",
-    credits: 200,
-    priority: "low",
-    description: "Conversion of 20 delivery vehicles from diesel to electric, reducing direct emissions from transportation.",
-    methodology: "GHG Protocol Mobile Sources",
-    baselineEmissions: 400,
-    reportedEmissions: 200,
-    documents: ["fleet_report.pdf", "fuel_consumption_logs.csv"],
-  },
-  { 
-    id: "RPT-007", 
-    company: "CleanAir Manufacturing", 
-    title: "Industrial Process Optimization",
-    submitted: "2024-01-12",
-    credits: 350,
-    priority: "high",
-    description: "Implementation of heat recovery systems and process optimization in cement manufacturing.",
-    methodology: "CDM AM0024",
-    baselineEmissions: 1200,
-    reportedEmissions: 850,
-    documents: ["process_documentation.pdf", "energy_flow_analysis.pdf"],
-  },
-];
+const pendingReviews = [];
 
-const recentActions = [
-  { id: "ACT-001", action: "Approved", report: "Solar Panel Installation", company: "SunPower Ltd", credits: 300, timestamp: "2024-01-15 10:30" },
-  { id: "ACT-002", action: "Rejected", report: "Carbon Capture Initiative", company: "FossilFree Inc", timestamp: "2024-01-14 16:45", reason: "Insufficient monitoring data" },
-  { id: "ACT-003", action: "Approved", report: "Reforestation Project", company: "GreenEarth NGO", credits: 1000, timestamp: "2024-01-14 09:15" },
-  { id: "ACT-004", action: "Approved", report: "Biogas Plant Operation", company: "AgriGreen Ltd", credits: 450, timestamp: "2024-01-13 14:20" },
-];
+const recentActions = [];
 
 export default function RegulatorDashboard() {
   const { toast } = useToast();
@@ -169,61 +111,68 @@ export default function RegulatorDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {pendingReviews.map((review, index) => (
-                  <motion.div
-                    key={review.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="rounded-lg border border-border bg-card p-4"
-                  >
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-start gap-3">
-                        <div className={`mt-1 rounded-full p-2 ${
-                          review.priority === "high" ? "bg-destructive/10" :
-                          review.priority === "medium" ? "bg-warning/10" : "bg-muted"
-                        }`}>
-                          <FileText className={`h-4 w-4 ${
-                            review.priority === "high" ? "text-destructive" :
-                            review.priority === "medium" ? "text-warning" : "text-muted-foreground"
-                          }`} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground">{review.title}</p>
-                            {review.priority === "high" && (
-                              <StatusBadge status="rejected" icon={<AlertCircle className="h-3 w-3" />}>
-                                High Priority
-                              </StatusBadge>
-                            )}
+                {pendingReviews.length > 0 ? (
+                  pendingReviews.map((review, index) => (
+                    <motion.div
+                      key={review.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="rounded-lg border border-border bg-card p-4"
+                    >
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <div className={`mt-1 rounded-full p-2 ${
+                            review.priority === "high" ? "bg-destructive/10" :
+                            review.priority === "medium" ? "bg-warning/10" : "bg-muted"
+                          }`}>
+                            <FileText className={`h-4 w-4 ${
+                              review.priority === "high" ? "text-destructive" :
+                              review.priority === "medium" ? "text-warning" : "text-muted-foreground"
+                            }`} />
                           </div>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Building className="h-3 w-3" />
-                            {review.company}
-                          </p>
-                          <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                            <span>ID: {review.id}</span>
-                            <span>•</span>
-                            <span>Submitted: {review.submitted}</span>
-                            <span>•</span>
-                            <span className="font-medium text-foreground">{review.credits} tCO₂e</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-foreground">{review.title}</p>
+                              {review.priority === "high" && (
+                                <StatusBadge status="rejected" icon={<AlertCircle className="h-3 w-3" />}>
+                                  High Priority
+                                </StatusBadge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Building className="h-3 w-3" />
+                              {review.company}
+                            </p>
+                            <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                              <span>ID: {review.id}</span>
+                              <span>•</span>
+                              <span>Submitted: {review.submitted}</span>
+                              <span>•</span>
+                              <span className="font-medium text-foreground">{review.credits} tCO₂e</span>
+                            </div>
                           </div>
                         </div>
+                        <Button 
+                          size="sm" 
+                          className="gap-1"
+                          onClick={() => {
+                            setSelectedReview(review);
+                            setReviewDialogOpen(true);
+                          }}
+                        >
+                          <Eye className="h-3 w-3" />
+                          Review
+                        </Button>
                       </div>
-                      <Button 
-                        size="sm" 
-                        className="gap-1"
-                        onClick={() => {
-                          setSelectedReview(review);
-                          setReviewDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="h-3 w-3" />
-                        Review
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No pending reviews</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -236,35 +185,42 @@ export default function RegulatorDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActions.map((action, index) => (
-                  <motion.div
-                    key={action.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border-b border-border pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-start gap-2">
-                      {action.action === "Approved" ? (
-                        <CheckCircle className="mt-0.5 h-4 w-4 text-success" />
-                      ) : (
-                        <XCircle className="mt-0.5 h-4 w-4 text-destructive" />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">
-                          {action.action} "{action.report}"
-                        </p>
-                        <p className="text-xs text-muted-foreground">{action.company}</p>
-                        {action.credits && (
-                          <p className="text-xs font-medium text-success">
-                            +{action.credits} credits issued
-                          </p>
+                {recentActions.length > 0 ? (
+                  recentActions.map((action, index) => (
+                    <motion.div
+                      key={action.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border-b border-border pb-4 last:border-0 last:pb-0"
+                    >
+                      <div className="flex items-start gap-2">
+                        {action.action === "Approved" ? (
+                          <CheckCircle className="mt-0.5 h-4 w-4 text-success" />
+                        ) : (
+                          <XCircle className="mt-0.5 h-4 w-4 text-destructive" />
                         )}
-                        <p className="mt-1 text-xs text-muted-foreground">{action.timestamp}</p>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {action.action} "{action.report}"
+                          </p>
+                          <p className="text-xs text-muted-foreground">{action.company}</p>
+                          {action.credits && (
+                            <p className="text-xs font-medium text-success">
+                              +{action.credits} credits issued
+                            </p>
+                          )}
+                          <p className="mt-1 text-xs text-muted-foreground">{action.timestamp}</p>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No recent actions</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

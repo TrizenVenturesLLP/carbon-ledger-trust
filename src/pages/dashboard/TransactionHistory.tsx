@@ -22,65 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const transactions = [
-  { 
-    id: "TXN-2024-001",
-    type: "issued",
-    amount: 300,
-    counterparty: "Regulator: EPA",
-    date: "2024-01-15",
-    time: "10:30:45",
-    hash: "0x1a2b3c4d5e6f7890abcdef1234567890abcdef12",
-    project: "Solar Farm Initiative",
-    status: "confirmed",
-    blockNumber: 18234567,
-  },
-  { 
-    id: "TXN-2024-002",
-    type: "received",
-    amount: 150,
-    counterparty: "GreenTech Corp",
-    date: "2024-01-14",
-    time: "14:22:10",
-    hash: "0x2b3c4d5e6f7890abcdef1234567890abcdef1234",
-    status: "confirmed",
-    blockNumber: 18234500,
-  },
-  { 
-    id: "TXN-2024-003",
-    type: "sent",
-    amount: 75,
-    counterparty: "EcoIndustries",
-    date: "2024-01-12",
-    time: "09:15:33",
-    hash: "0x3c4d5e6f7890abcdef1234567890abcdef123456",
-    status: "confirmed",
-    blockNumber: 18234100,
-  },
-  { 
-    id: "TXN-2024-004",
-    type: "retired",
-    amount: 50,
-    date: "2024-01-10",
-    time: "16:45:00",
-    hash: "0x4d5e6f7890abcdef1234567890abcdef12345678",
-    reason: "Q4 2023 Offset",
-    status: "confirmed",
-    blockNumber: 18233800,
-  },
-  { 
-    id: "TXN-2024-005",
-    type: "issued",
-    amount: 200,
-    counterparty: "Regulator: Gold Standard",
-    date: "2024-01-08",
-    time: "11:00:00",
-    hash: "0x5e6f7890abcdef1234567890abcdef1234567890",
-    project: "Reforestation Project",
-    status: "confirmed",
-    blockNumber: 18233500,
-  },
-];
+const transactions = [];
 
 type TransactionType = "all" | "issued" | "received" | "sent" | "retired";
 
@@ -182,7 +124,8 @@ export default function TransactionHistory() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredTransactions.map((tx, index) => (
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((tx, index) => (
                 <motion.div
                   key={tx.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -245,7 +188,13 @@ export default function TransactionHistory() {
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Coins className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No transactions found</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

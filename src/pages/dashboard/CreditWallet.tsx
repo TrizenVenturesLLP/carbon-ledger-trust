@@ -25,40 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-const credits = [
-  { 
-    id: "CC-2024-001", 
-    amount: 100, 
-    issuer: "EPA Verified", 
-    issuedDate: "2024-01-10", 
-    project: "Solar Farm Initiative",
-    status: "active" as const 
-  },
-  { 
-    id: "CC-2024-002", 
-    amount: 250, 
-    issuer: "Gold Standard", 
-    issuedDate: "2024-01-08", 
-    project: "Reforestation Project",
-    status: "active" as const 
-  },
-  { 
-    id: "CC-2024-003", 
-    amount: 75, 
-    issuer: "Verra VCS", 
-    issuedDate: "2024-01-05", 
-    project: "Wind Energy Project",
-    status: "active" as const 
-  },
-  { 
-    id: "CC-2023-045", 
-    amount: 150, 
-    issuer: "EPA Verified", 
-    issuedDate: "2023-12-20", 
-    project: "Methane Capture",
-    status: "retired" as const 
-  },
-];
+const credits = [];
 
 export default function CreditWallet() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -151,7 +118,8 @@ export default function CreditWallet() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredCredits.map((credit, index) => (
+              {filteredCredits.length > 0 ? (
+                filteredCredits.map((credit, index) => (
                 <motion.div
                   key={credit.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -265,7 +233,13 @@ export default function CreditWallet() {
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Coins className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No carbon credits found</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

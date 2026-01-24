@@ -26,51 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const reports = [
-  { 
-    id: "RPT-2024-001", 
-    title: "Q4 2023 Emission Reduction", 
-    type: "Quarterly Report",
-    submitted: "2024-01-10",
-    status: "pending" as const,
-    estimatedCredits: 150,
-    description: "Emission reductions from solar panel installation and energy efficiency improvements.",
-    documents: ["emission_data.pdf", "verification_report.pdf"],
-  },
-  { 
-    id: "RPT-2024-002", 
-    title: "Solar Panel Installation", 
-    type: "Project Report",
-    submitted: "2024-01-08",
-    status: "approved" as const,
-    estimatedCredits: 300,
-    issuedCredits: 300,
-    description: "Installation of 500kW solar panel system at main manufacturing facility.",
-    documents: ["project_documentation.pdf", "energy_audit.pdf"],
-  },
-  { 
-    id: "RPT-2024-003", 
-    title: "Fleet Electrification Phase 1", 
-    type: "Project Report",
-    submitted: "2024-01-05",
-    status: "rejected" as const,
-    estimatedCredits: 200,
-    description: "Conversion of 20 delivery vehicles to electric.",
-    documents: ["fleet_report.pdf"],
-    rejectionReason: "Insufficient baseline data. Please provide historical fuel consumption records.",
-  },
-  { 
-    id: "RPT-2023-045", 
-    title: "Methane Capture Initiative", 
-    type: "Project Report",
-    submitted: "2023-12-15",
-    status: "approved" as const,
-    estimatedCredits: 500,
-    issuedCredits: 475,
-    description: "Methane capture and utilization from wastewater treatment.",
-    documents: ["methane_report.pdf", "monitoring_data.xlsx"],
-  },
-];
+const reports = [];
 
 export default function EmissionReports() {
   const { toast } = useToast();
@@ -251,110 +207,117 @@ export default function EmissionReports() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {reports.map((report, index) => (
-                <motion.div
-                  key={report.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
-                >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className={`mt-1 rounded-lg p-2 ${
-                        report.status === "approved" ? "bg-success/10" :
-                        report.status === "rejected" ? "bg-destructive/10" : "bg-warning/10"
-                      }`}>
-                        {getStatusIcon(report.status)}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-foreground">{report.title}</p>
-                          <StatusBadge status={report.status}>
-                            {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                          </StatusBadge>
+              {reports.length > 0 ? (
+                reports.map((report, index) => (
+                  <motion.div
+                    key={report.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
+                  >
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex items-start gap-4">
+                        <div className={`mt-1 rounded-lg p-2 ${
+                          report.status === "approved" ? "bg-success/10" :
+                          report.status === "rejected" ? "bg-destructive/10" : "bg-warning/10"
+                        }`}>
+                          {getStatusIcon(report.status)}
                         </div>
-                        <p className="text-sm text-muted-foreground">{report.description}</p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Building className="h-3 w-3" />
-                            {report.type}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Submitted: {report.submitted}
-                          </span>
-                          <span>ID: {report.id}</span>
-                        </div>
-                        {report.status === "rejected" && report.rejectionReason && (
-                          <div className="mt-2 rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
-                            <strong>Rejection Reason:</strong> {report.rejectionReason}
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-foreground">{report.title}</p>
+                            <StatusBadge status={report.status}>
+                              {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                            </StatusBadge>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">
-                          {report.status === "approved" ? "Issued Credits" : "Estimated Credits"}
-                        </p>
-                        <p className="text-xl font-bold text-foreground">
-                          {report.issuedCredits || report.estimatedCredits} tCO₂e
-                        </p>
-                      </div>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedReport(report)}>
-                            <Eye className="mr-1 h-3 w-3" />
-                            View Details
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>{report.title}</DialogTitle>
-                            <DialogDescription>Report ID: {report.id}</DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                              <StatusBadge status={report.status}>
-                                {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                              </StatusBadge>
-                              <span className="text-sm text-muted-foreground">{report.type}</span>
+                          <p className="text-sm text-muted-foreground">{report.description}</p>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Building className="h-3 w-3" />
+                              {report.type}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Submitted: {report.submitted}
+                            </span>
+                            <span>ID: {report.id}</span>
+                          </div>
+                          {report.status === "rejected" && report.rejectionReason && (
+                            <div className="mt-2 rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
+                              <strong>Rejection Reason:</strong> {report.rejectionReason}
                             </div>
-                            <div>
-                              <p className="text-sm font-medium">Description</p>
-                              <p className="text-sm text-muted-foreground">{report.description}</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-sm font-medium">Submitted</p>
-                                <p className="text-sm text-muted-foreground">{report.submitted}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">
+                            {report.status === "approved" ? "Issued Credits" : "Estimated Credits"}
+                          </p>
+                          <p className="text-xl font-bold text-foreground">
+                            {report.issuedCredits || report.estimatedCredits} tCO₂e
+                          </p>
+                        </div>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedReport(report)}>
+                              <Eye className="mr-1 h-3 w-3" />
+                              View Details
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>{report.title}</DialogTitle>
+                              <DialogDescription>Report ID: {report.id}</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status={report.status}>
+                                  {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                                </StatusBadge>
+                                <span className="text-sm text-muted-foreground">{report.type}</span>
                               </div>
                               <div>
-                                <p className="text-sm font-medium">Credits</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {report.issuedCredits || report.estimatedCredits} tCO₂e
-                                </p>
+                                <p className="text-sm font-medium">Description</p>
+                                <p className="text-sm text-muted-foreground">{report.description}</p>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-sm font-medium">Submitted</p>
+                                  <p className="text-sm text-muted-foreground">{report.submitted}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">Credits</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {report.issuedCredits || report.estimatedCredits} tCO₂e
+                                  </p>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium mb-2">Documents</p>
+                                <div className="space-y-2">
+                                  {report.documents.map((doc) => (
+                                    <div key={doc} className="flex items-center gap-2 rounded-lg bg-muted p-2">
+                                      <FileText className="h-4 w-4 text-muted-foreground" />
+                                      <span className="text-sm">{doc}</span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium mb-2">Documents</p>
-                              <div className="space-y-2">
-                                {report.documents.map((doc) => (
-                                  <div key={doc} className="flex items-center gap-2 rounded-lg bg-muted p-2">
-                                    <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-sm">{doc}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No emission reports</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -23,13 +23,13 @@ interface DashboardLayoutProps {
 
 const navItems = {
   company: [
-    { icon: LayoutDashboard, label: "Overview", href: "/dashboard/company" },
+    // { icon: LayoutDashboard, label: "Overview", href: "/dashboard/company" },
     { icon: FileText, label: "Emission Reports", href: "/dashboard/company/reports" },
     { icon: Wallet, label: "Credit Wallet", href: "/dashboard/company/wallet" },
     { icon: History, label: "Transaction History", href: "/dashboard/company/history" },
   ],
   regulator: [
-    { icon: LayoutDashboard, label: "Overview", href: "/dashboard/regulator" },
+    // { icon: LayoutDashboard, label: "Overview", href: "/dashboard/regulator" },
     { icon: CheckSquare, label: "Pending Reviews", href: "/dashboard/regulator/reviews" },
     { icon: FileCheck, label: "Approved Reports", href: "/dashboard/regulator/approved" },
     { icon: History, label: "Audit Log", href: "/dashboard/regulator/audit" },

@@ -45,14 +45,11 @@ export function Features() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="inline-block rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary mb-4">
-            Why Choose Us
-          </span>
           <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl md:text-5xl">
             Built for Trust & Transparency
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Our platform combines blockchain technology with intuitive design to make carbon credit 
+            The Platform combines blockchain technology with intuitive design to make carbon credit 
             management accessible and trustworthy.
           </p>
         </motion.div>
