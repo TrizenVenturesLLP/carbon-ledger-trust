@@ -46,4 +46,9 @@ export const authApi = {
     const response = await apiClient.post<User>('/auth/link-wallet', { walletAddress });
     return response.data;
   },
+
+  unlinkWallet: async (): Promise<User> => {
+    const response = await apiClient.post<User>('/auth/unlink-wallet');
+    return response.data;
+  },
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 
   Coins, 
@@ -8,7 +8,9 @@ import {
   Copy, 
   Check, 
   ExternalLink,
-  Search
+  Search,
+  Wallet,
+  AlertCircle
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -25,16 +27,44 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { creditsApi, CarbonCredit } from "@/api/credits.api";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useCarbonCreditContract } from "@/hooks/use-carbon-credit-contract";
+import { useAuth } from "@/context/AuthContext";
+import { useMetaMask } from "@/hooks/use-metamask";
 
 export default function CreditWallet() {
   const { toast } = useToast();
+  const { user, refreshUser } = useAuth();
+  const queryClient = useQueryClient();
+  const { transferCreditOnChain, retireCreditOnChain } = useCarbonCreditContract();
+  const { isInstalled, isConnected, account, connect, isLoading: isConnecting } = useMetaMask();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedWallet, setCopiedWallet] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [retireDialogOpen, setRetireDialogOpen] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedCredit, setSelectedCredit] = useState<CarbonCredit | null>(null);
+  const [retirementReason, setRetirementReason] = useState("");
+  const [transferWalletAddress, setTransferWalletAddress] = useState("");
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [isRetiring, setIsRetiring] = useState(false);
+
+  const handleConnectWallet = async () => {
+    await connect();
+    // Refresh user data after connecting
+    await refreshUser();
+  };
+
+  const handleCopyWallet = async () => {
+    if (user?.walletAddress) {
+      await navigator.clipboard.writeText(user.walletAddress);
+      setCopiedWallet(true);
+      setTimeout(() => setCopiedWallet(false), 2000);
+    }
+  };
 
   // Fetch credits
   const { data: credits = [], isLoading: creditsLoading } = useQuery({
@@ -57,6 +87,110 @@ export default function CreditWallet() {
   const totalActive = balance?.active || 0;
   const totalRetired = balance?.retired || 0;
 
+  const handleTransfer = async () => {
+    if (!selectedCredit || !transferWalletAddress) {
+      toast({
+        title: "Error",
+        description: "Please enter a wallet address",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!selectedCredit.tokenId) {
+      toast({
+        title: "Error",
+        description: "This credit does not have an associated token ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsTransferring(true);
+      // 1) Execute on-chain transfer with MetaMask (will trigger popup)
+      const { txHash } = await transferCreditOnChain(selectedCredit.tokenId, transferWalletAddress);
+
+      // 2) Record transfer in backend (DB + transaction history)
+      await creditsApi.transferCredit(selectedCredit._id, {
+        toWalletAddress: transferWalletAddress,
+        blockchainTxHash: txHash,
+      });
+
+      toast({
+        title: "Transfer Successful",
+        description: `Transaction: ${txHash.substring(0, 10)}...`,
+      });
+
+      setTransferDialogOpen(false);
+      setTransferWalletAddress("");
+      setSelectedCredit(null);
+
+      queryClient.invalidateQueries({ queryKey: ["credits"] });
+      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    } catch (error: any) {
+      toast({
+        title: "Transfer Failed",
+        description: error?.message || error?.response?.data?.error || "Failed to transfer credit",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
+  const handleRetire = async () => {
+    if (!selectedCredit || !retirementReason) {
+      toast({
+        title: "Error",
+        description: "Please provide a retirement reason",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!selectedCredit.tokenId) {
+      toast({
+        title: "Error",
+        description: "This credit does not have an associated token ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsRetiring(true);
+      // 1) Execute on-chain retirement with MetaMask
+      const { txHash } = await retireCreditOnChain(selectedCredit.tokenId, retirementReason);
+
+      // 2) Record retirement in backend
+      await creditsApi.retireCredit(selectedCredit._id, {
+        retirementReason,
+        blockchainTxHash: txHash,
+      });
+
+      toast({
+        title: "Retirement Successful",
+        description: `Transaction: ${txHash.substring(0, 10)}...`,
+      });
+
+      setRetireDialogOpen(false);
+      setRetirementReason("");
+      setSelectedCredit(null);
+
+      queryClient.invalidateQueries({ queryKey: ["credits"] });
+      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    } catch (error: any) {
+      toast({
+        title: "Retirement Failed",
+        description: error?.message || error?.response?.data?.error || "Failed to retire credit",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRetiring(false);
+    }
+  };
+
   const filteredCredits = credits.filter((c: CarbonCredit) => 
     c.creditId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (c.reportId?.title || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -74,6 +208,83 @@ export default function CreditWallet() {
             Manage your carbon credits and view detailed information
           </p>
         </div>
+
+        {/* Wallet Connection Alert */}
+        {!user?.walletAddress && (
+          <Alert className="border-warning/50 bg-warning/10">
+            <Wallet className="h-4 w-4" />
+            <AlertTitle>Wallet Not Connected</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
+              <span>Connect your MetaMask wallet to transfer and retire carbon credits.</span>
+              {isInstalled ? (
+                <Button
+                  onClick={handleConnectWallet}
+                  disabled={isConnecting}
+                  size="sm"
+                  className="ml-4"
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  {isConnecting ? "Connecting..." : "Connect Wallet"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => window.open("https://metamask.io/download/", "_blank")}
+                  size="sm"
+                  variant="outline"
+                  className="ml-4"
+                >
+                  Install MetaMask
+                </Button>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Wallet Info Card */}
+        {user?.walletAddress && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-success/10 p-2">
+                    <Wallet className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Linked Wallet</p>
+                    <p className="text-xs font-mono text-muted-foreground">
+                      {user.walletAddress.substring(0, 6)}...{user.walletAddress.substring(38)}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyWallet}
+                >
+                  {copiedWallet ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+              {isConnected && account && account.toLowerCase() !== user.walletAddress.toLowerCase() && (
+                <Alert className="mt-3 border-warning/50 bg-warning/10">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    MetaMask is connected to a different address. Please switch to your linked wallet or update your linked address.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary Cards */}
         <div className="grid gap-4 sm:grid-cols-3">
@@ -176,7 +387,7 @@ export default function CreditWallet() {
                                   <Copy className="h-3 w-3 text-muted-foreground" />
                                 )}
                               </button>
-                              <StatusBadge status={credit.status}>
+                              <StatusBadge status={credit.status === "transferred" ? "active" : credit.status}>
                                 {credit.status.charAt(0).toUpperCase() + credit.status.slice(1)}
                               </StatusBadge>
                             </div>
@@ -199,13 +410,78 @@ export default function CreditWallet() {
                           </div>
                           {credit.status === "active" && (
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm" disabled>
-                                <ArrowUpRight className="mr-1 h-3 w-3" />
-                                Transfer
-                              </Button>
+                              <Dialog open={transferDialogOpen && selectedCredit?._id === credit._id} onOpenChange={(open) => {
+                                setTransferDialogOpen(open);
+                                if (open) {
+                                  setSelectedCredit(credit);
+                                } else {
+                                  setTransferWalletAddress("");
+                                  setSelectedCredit(null);
+                                }
+                              }}>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <ArrowUpRight className="mr-1 h-3 w-3" />
+                                    Transfer
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Transfer Carbon Credits</DialogTitle>
+                                    <DialogDescription>
+                                      Transfer this credit to another company's wallet address. The recipient must have their wallet linked to their account.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  {selectedCredit && (
+                                    <div className="space-y-4 py-4">
+                                      <div className="rounded-lg border border-border bg-muted/50 p-4">
+                                        <div className="flex justify-between">
+                                          <span className="text-sm text-muted-foreground">Credit ID</span>
+                                          <span className="font-mono text-sm">{selectedCredit.creditId}</span>
+                                        </div>
+                                        <div className="mt-2 flex justify-between">
+                                          <span className="text-sm text-muted-foreground">Amount</span>
+                                          <span className="font-bold">{selectedCredit.amount} tCO₂e</span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label htmlFor="walletAddress">Recipient Wallet Address</Label>
+                                        <Input
+                                          id="walletAddress"
+                                          placeholder="0x..."
+                                          value={transferWalletAddress}
+                                          onChange={(e) => setTransferWalletAddress(e.target.value)}
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                          Enter the wallet address of the recipient company
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <DialogFooter>
+                                    <Button variant="outline" onClick={() => {
+                                      setTransferDialogOpen(false);
+                                      setTransferWalletAddress("");
+                                    }}>
+                                      Cancel
+                                    </Button>
+                                    <Button 
+                                      onClick={handleTransfer}
+                                      disabled={isTransferring || !transferWalletAddress}
+                                    >
+                                      {isTransferring ? "Transferring..." : "Confirm Transfer"}
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
                               <Dialog open={retireDialogOpen && selectedCredit?._id === credit._id} onOpenChange={(open) => {
                                 setRetireDialogOpen(open);
-                                if (open) setSelectedCredit(credit);
+                                if (open) {
+                                  setSelectedCredit(credit);
+                                } else {
+                                  setRetirementReason("");
+                                  setSelectedCredit(null);
+                                }
                               }}>
                                 <DialogTrigger asChild>
                                   <Button variant="secondary" size="sm">
@@ -234,20 +510,29 @@ export default function CreditWallet() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <Label>Retirement Reason</Label>
-                                        <Input placeholder="e.g., Offsetting 2024 Q1 emissions" />
+                                        <Label htmlFor="retirementReason">Retirement Reason</Label>
+                                        <Input
+                                          id="retirementReason"
+                                          placeholder="e.g., Offsetting 2024 Q1 emissions"
+                                          value={retirementReason}
+                                          onChange={(e) => setRetirementReason(e.target.value)}
+                                        />
                                       </div>
                                     </div>
                                   )}
                                   <DialogFooter>
-                                    <Button variant="outline" onClick={() => setRetireDialogOpen(false)}>
+                                    <Button variant="outline" onClick={() => {
+                                      setRetireDialogOpen(false);
+                                      setRetirementReason("");
+                                    }}>
                                       Cancel
                                     </Button>
-                                    <Button variant="destructive" onClick={() => {
-                                      toast({ title: "Retirement", description: "Credit retirement will be implemented with blockchain integration" });
-                                      setRetireDialogOpen(false);
-                                    }}>
-                                      Confirm Retirement
+                                    <Button 
+                                      variant="destructive" 
+                                      onClick={handleRetire}
+                                      disabled={isRetiring || !retirementReason}
+                                    >
+                                      {isRetiring ? "Retiring..." : "Confirm Retirement"}
                                     </Button>
                                   </DialogFooter>
                                 </DialogContent>

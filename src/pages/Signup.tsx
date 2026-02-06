@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Leaf, Building2, Shield } from "lucide-react";
@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useMetaMask } from "@/hooks/use-metamask";
 import { authApi } from "@/api/auth.api";
+import { Wallet } from "lucide-react";
 
 type Role = "company" | "regulator";
 
@@ -31,6 +33,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
+  const { connect, isConnected, account, isInstalled } = useMetaMask();
   const [selectedRole, setSelectedRole] = useState<Role>("company");
   const [formData, setFormData] = useState({
     email: "",
@@ -40,6 +43,13 @@ export default function Signup() {
     walletAddress: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update wallet address when MetaMask connects
+  useEffect(() => {
+    if (account) {
+      setFormData(prev => ({ ...prev, walletAddress: account }));
+    }
+  }, [account]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,16 +234,36 @@ export default function Signup() {
                 <Label htmlFor="walletAddress" className="text-white/90">
                   Wallet Address (Optional)
                 </Label>
-                <Input
-                  id="walletAddress"
-                  type="text"
-                  placeholder="0x..."
-                  value={formData.walletAddress}
-                  onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
-                  className="border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:border-accent"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="walletAddress"
+                    type="text"
+                    placeholder="0x..."
+                    value={formData.walletAddress}
+                    onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
+                    className="border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:border-accent"
+                  />
+                  {isInstalled && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={connect}
+                      className="whitespace-nowrap"
+                    >
+                      <Wallet className="h-4 w-4 mr-1" />
+                      {isConnected ? "Connected" : "Connect"}
+                    </Button>
+                  )}
+                </div>
+                {isConnected && account && (
+                  <p className="text-xs text-success">
+                    Connected: {account.substring(0, 6)}...{account.substring(38)}
+                  </p>
+                )}
                 <p className="text-xs text-white/50">
-                  Connect your MetaMask wallet address for blockchain transactions
+                  {isInstalled 
+                    ? "Connect your MetaMask wallet or enter manually"
+                    : "Install MetaMask to connect your wallet automatically"}
                 </p>
               </div>
 

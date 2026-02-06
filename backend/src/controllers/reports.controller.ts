@@ -1,7 +1,9 @@
 import { Response } from 'express';
 import { EmissionReport } from '../models/EmissionReport';
+import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { deleteFile } from '../services/file.service';
+import { registerReport } from '../services/blockchain.service';
 
 export const submitReport = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -32,6 +34,13 @@ export const submitReport = async (req: AuthRequest, res: Response): Promise<voi
       uploadedAt: new Date(),
     }));
 
+    // Get company wallet address
+    const company = await User.findById(req.user?.id);
+    if (!company) {
+      res.status(404).json({ error: 'Company not found' });
+      return;
+    }
+
     // Create report
     const report = await EmissionReport.create({
       companyId: req.user?.id,
@@ -45,6 +54,21 @@ export const submitReport = async (req: AuthRequest, res: Response): Promise<voi
       documents,
       status: 'pending',
     });
+
+    // Register report on blockchain (optional - only if wallet is linked)
+    if (company.walletAddress) {
+      try {
+        // Convert reportId to numeric ID for blockchain (use last 8 chars of MongoDB _id as hex)
+        const numericId = parseInt(report._id.toString().slice(-8), 16) || Date.now() % 1000000000;
+        const registryId = await registerReport(numericId, company.walletAddress);
+        report.blockchainReportId = registryId;
+        await report.save();
+      } catch (blockchainError: any) {
+        // Log error but don't fail report submission
+        console.warn('Failed to register report on blockchain:', blockchainError.message);
+        // Report is still created successfully
+      }
+    }
 
     res.status(201).json(report);
   } catch (error: any) {

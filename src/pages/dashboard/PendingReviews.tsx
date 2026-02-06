@@ -137,6 +137,10 @@ export default function PendingReviews() {
     return company?.email || company?._id;
   })).size;
 
+  // Count high-priority reports if the backend ever adds a `priority` field.
+  // For now this will safely be 0 when `priority` is undefined.
+  const highPriority = allPendingReviews.filter((r: any) => r.priority === "high").length;
+
   return (
     <DashboardLayout role="regulator">
       <div className="space-y-8">

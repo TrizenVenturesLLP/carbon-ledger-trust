@@ -41,6 +41,16 @@ export interface WalletBalance {
   total: number;
 }
 
+interface TransferRecordPayload {
+  toWalletAddress: string;
+  blockchainTxHash: string;
+}
+
+interface RetireRecordPayload {
+  retirementReason: string;
+  blockchainTxHash: string;
+}
+
 export const creditsApi = {
   getCredits: async (status?: string): Promise<CarbonCredit[]> => {
     const params = status ? { status } : {};
@@ -55,6 +65,18 @@ export const creditsApi = {
 
   getWalletBalance: async (): Promise<WalletBalance> => {
     const response = await apiClient.get<WalletBalance>('/credits/wallet');
+    return response.data;
+  },
+
+  // Record a transfer that was already executed on-chain via MetaMask
+  transferCredit: async (id: string, data: TransferRecordPayload): Promise<any> => {
+    const response = await apiClient.post(`/credits/${id}/transfer`, data);
+    return response.data;
+  },
+
+  // Record a retirement that was already executed on-chain via MetaMask
+  retireCredit: async (id: string, data: RetireRecordPayload): Promise<any> => {
+    const response = await apiClient.post(`/credits/${id}/retire`, data);
     return response.data;
   },
 };

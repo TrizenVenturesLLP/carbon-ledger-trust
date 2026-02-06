@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useMetaMask } from "@/hooks/use-metamask";
 
 type Role = "company" | "regulator";
 
@@ -35,6 +36,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
+  const { connect, isConnected, account, isInstalled } = useMetaMask();
   const [searchParams] = useSearchParams();
   const initialRole = (searchParams.get("role") as Role) || "company";
   
@@ -194,17 +196,56 @@ export default function Login() {
 
             {/* Wallet Connection */}
             <div className="mt-6 border-t border-white/10 pt-6">
-              <Button
-                variant="heroOutline"
-                className="w-full gap-2"
-                onClick={() => toast({ title: "Wallet Connection", description: "MetaMask integration coming soon" })}
-              >
-                <Wallet className="h-4 w-4" />
-                Connect Wallet (Optional)
-              </Button>
-              <p className="mt-2 text-center text-xs text-white/50">
-                Connect your wallet for blockchain transactions
-              </p>
+              {isInstalled ? (
+                isConnected ? (
+                  <div className="space-y-2">
+                    <div className="rounded-lg bg-success/10 border border-success/20 p-3">
+                      <p className="text-xs text-success font-medium mb-1">Wallet Connected</p>
+                      <p className="text-xs font-mono text-white/70">
+                        {account?.substring(0, 6)}...{account?.substring(38)}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => {
+                        toast({ title: "Disconnect", description: "Please disconnect from MetaMask extension" });
+                      }}
+                    >
+                      Disconnect
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      variant="heroOutline"
+                      className="w-full gap-2"
+                      onClick={connect}
+                    >
+                      <Wallet className="h-4 w-4" />
+                      Connect MetaMask Wallet
+                    </Button>
+                    <p className="mt-2 text-center text-xs text-white/50">
+                      Connect your wallet for blockchain transactions
+                    </p>
+                  </>
+                )
+              ) : (
+                <div className="space-y-2">
+                  <Button
+                    variant="heroOutline"
+                    className="w-full gap-2"
+                    onClick={() => window.open('https://metamask.io/download/', '_blank')}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Install MetaMask
+                  </Button>
+                  <p className="mt-2 text-center text-xs text-white/50">
+                    Install MetaMask to connect your wallet
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

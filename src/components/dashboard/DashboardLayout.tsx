@@ -12,10 +12,22 @@ import {
   Menu,
   ChevronDown,
   FileCheck,
+  Copy,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useMetaMask } from "@/hooks/use-metamask";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -40,8 +52,11 @@ const navItems = {
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { toast } = useToast();
+  const { user, logout, refreshUser } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const { isInstalled, isConnected, account, connect, disconnect, isLoading: isConnecting } = useMetaMask();
 
   const items = navItems[role];
   
@@ -54,6 +69,48 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getUserInitials = () => {
     const name = getUserDisplayName();
     return name.substring(0, 2).toUpperCase();
+  };
+
+  const handleCopyWallet = async () => {
+    if (user?.walletAddress) {
+      await navigator.clipboard.writeText(user.walletAddress);
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  };
+
+  const handleConnectWallet = async () => {
+    await connect();
+    // Refresh user data after connecting
+    await refreshUser();
+  };
+
+  const handleDisconnectWallet = async () => {
+    try {
+      // Disconnect MetaMask if connected
+      if (isConnected) {
+        disconnect();
+      }
+      
+      // Unlink wallet from account
+      const { authApi } = await import('@/api/auth.api');
+      await authApi.unlinkWallet();
+      
+      // Refresh user data to reflect the unlinked state
+      await refreshUser();
+      
+      toast({
+        title: 'Wallet Unlinked',
+        description: 'Your wallet has been unlinked from your account',
+      });
+    } catch (error: any) {
+      console.error('Failed to unlink wallet:', error);
+      toast({
+        title: 'Failed to Unlink Wallet',
+        description: error?.response?.data?.error || 'An error occurred while unlinking your wallet',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -145,19 +202,107 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-1.5">
-              <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-              <span className="text-xs font-medium text-muted-foreground">Connected</span>
-            </div>
-            <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-bold text-primary">
-                  {getUserInitials()}
+            {/* Wallet Status Badge - Only show for companies */}
+            {role === "company" && (
+              <div className={cn(
+                "flex items-center gap-2 rounded-lg border px-3 py-1.5",
+                user?.walletAddress 
+                  ? "border-success/50 bg-success/10" 
+                  : "border-warning/50 bg-warning/10"
+              )}>
+                <div className={cn(
+                  "h-2 w-2 rounded-full",
+                  user?.walletAddress ? "bg-success animate-pulse" : "bg-warning"
+                )} />
+                <span className="text-xs font-medium text-muted-foreground">
+                  {user?.walletAddress ? "Wallet Linked" : "No Wallet"}
                 </span>
               </div>
-              <span className="hidden sm:inline">{getUserDisplayName()}</span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </button>
+            )}
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary">
+                      {getUserInitials()}
+                    </span>
+                  </div>
+                  <span className="hidden sm:inline">{getUserDisplayName()}</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{getUserDisplayName()}</span>
+                    <span className="text-xs text-muted-foreground font-normal">{user?.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Wallet Section - Only for companies */}
+                {role === "company" && (
+                  <>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                      Wallet
+                    </DropdownMenuLabel>
+                    {user?.walletAddress ? (
+                      <>
+                        <DropdownMenuItem
+                          onClick={handleCopyWallet}
+                          className="flex items-center justify-between cursor-pointer"
+                        >
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="text-xs font-mono text-muted-foreground truncate">
+                              {user.walletAddress.substring(0, 6)}...{user.walletAddress.substring(38)}
+                            </span>
+                            <span className="text-xs text-success">Linked</span>
+                          </div>
+                          {copiedAddress ? (
+                            <Check className="h-4 w-4 text-success" />
+                          ) : (
+                            <Copy className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={handleDisconnectWallet}
+                          className="cursor-pointer text-xs text-destructive focus:text-destructive"
+                        >
+                          Unlink Wallet
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <DropdownMenuItem
+                        onClick={handleConnectWallet}
+                        disabled={!isInstalled || isConnecting}
+                        className="cursor-pointer"
+                      >
+                        <Wallet className="h-4 w-4 mr-2" />
+                        {isConnecting ? "Connecting..." : isInstalled ? "Connect Wallet" : "Install MetaMask"}
+                      </DropdownMenuItem>
+                    )}
+                    {user?.walletAddress && isConnected && account && account.toLowerCase() !== user.walletAddress.toLowerCase() && (
+                      <DropdownMenuItem className="text-xs text-warning">
+                        MetaMask connected to different address
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                
+                <DropdownMenuItem
+                  onClick={() => {
+                    logout();
+                    navigate("/login");
+                  }}
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 

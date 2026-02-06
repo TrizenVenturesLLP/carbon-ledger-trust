@@ -162,3 +162,28 @@ export const linkWallet = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({ error: error.message });
   }
 };
+
+export const unlinkWallet = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user?.id,
+      { walletAddress: null },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      companyName: user.companyName,
+      walletAddress: user.walletAddress,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
