@@ -202,23 +202,21 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Wallet Status Badge - Only show for companies */}
-            {role === "company" && (
+            {/* Wallet Status Badge - show for both company and regulator */}
+            <div className={cn(
+              "flex items-center gap-2 rounded-lg border px-3 py-1.5",
+              user?.walletAddress 
+                ? "border-success/50 bg-success/10" 
+                : "border-warning/50 bg-warning/10"
+            )}>
               <div className={cn(
-                "flex items-center gap-2 rounded-lg border px-3 py-1.5",
-                user?.walletAddress 
-                  ? "border-success/50 bg-success/10" 
-                  : "border-warning/50 bg-warning/10"
-              )}>
-                <div className={cn(
-                  "h-2 w-2 rounded-full",
-                  user?.walletAddress ? "bg-success animate-pulse" : "bg-warning"
-                )} />
-                <span className="text-xs font-medium text-muted-foreground">
-                  {user?.walletAddress ? "Wallet Linked" : "No Wallet"}
-                </span>
-              </div>
-            )}
+                "h-2 w-2 rounded-full",
+                user?.walletAddress ? "bg-success animate-pulse" : "bg-warning"
+              )} />
+              <span className="text-xs font-medium text-muted-foreground">
+                {user?.walletAddress ? "Wallet Linked" : "No Wallet"}
+              </span>
+            </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -241,55 +239,51 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 
-                {/* Wallet Section - Only for companies */}
-                {role === "company" && (
+                {/* Wallet Section - for both company and regulator */}
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Wallet
+                </DropdownMenuLabel>
+                {user?.walletAddress ? (
                   <>
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">
-                      Wallet
-                    </DropdownMenuLabel>
-                    {user?.walletAddress ? (
-                      <>
-                        <DropdownMenuItem
-                          onClick={handleCopyWallet}
-                          className="flex items-center justify-between cursor-pointer"
-                        >
-                          <div className="flex flex-col flex-1 min-w-0">
-                            <span className="text-xs font-mono text-muted-foreground truncate">
-                              {user.walletAddress.substring(0, 6)}...{user.walletAddress.substring(38)}
-                            </span>
-                            <span className="text-xs text-success">Linked</span>
-                          </div>
-                          {copiedAddress ? (
-                            <Check className="h-4 w-4 text-success" />
-                          ) : (
-                            <Copy className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={handleDisconnectWallet}
-                          className="cursor-pointer text-xs text-destructive focus:text-destructive"
-                        >
-                          Unlink Wallet
-                        </DropdownMenuItem>
-                      </>
-                    ) : (
-                      <DropdownMenuItem
-                        onClick={handleConnectWallet}
-                        disabled={!isInstalled || isConnecting}
-                        className="cursor-pointer"
-                      >
-                        <Wallet className="h-4 w-4 mr-2" />
-                        {isConnecting ? "Connecting..." : isInstalled ? "Connect Wallet" : "Install MetaMask"}
-                      </DropdownMenuItem>
-                    )}
-                    {user?.walletAddress && isConnected && account && account.toLowerCase() !== user.walletAddress.toLowerCase() && (
-                      <DropdownMenuItem className="text-xs text-warning">
-                        MetaMask connected to different address
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleCopyWallet}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="text-xs font-mono text-muted-foreground truncate">
+                          {user.walletAddress.substring(0, 6)}...{user.walletAddress.substring(38)}
+                        </span>
+                        <span className="text-xs text-success">Linked</span>
+                      </div>
+                      {copiedAddress ? (
+                        <Check className="h-4 w-4 text-success" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleDisconnectWallet}
+                      className="cursor-pointer text-xs text-destructive focus:text-destructive"
+                    >
+                      Unlink Wallet
+                    </DropdownMenuItem>
                   </>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={handleConnectWallet}
+                    disabled={!isInstalled || isConnecting}
+                    className="cursor-pointer"
+                  >
+                    <Wallet className="h-4 w-4 mr-2" />
+                    {isConnecting ? "Connecting..." : isInstalled ? "Connect Wallet" : "Install MetaMask"}
+                  </DropdownMenuItem>
                 )}
+                {user?.walletAddress && isConnected && account && account.toLowerCase() !== user.walletAddress.toLowerCase() && (
+                  <DropdownMenuItem className="text-xs text-warning">
+                    MetaMask connected to different address
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
                 
                 <DropdownMenuItem
                   onClick={() => {

@@ -2,18 +2,15 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { 
   CheckCircle, 
-  FileText, 
   Building, 
   Calendar,
   Coins,
-  ExternalLink,
   Copy,
   Check
 } from "lucide-react";
 import { useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { reviewsApi } from "@/api/reviews.api";
 import { EmissionReport } from "@/api/reports.api";
@@ -105,9 +102,21 @@ export default function ApprovedReports() {
           <CardContent>
             <div className="space-y-4">
               {approvedReports.length > 0 ? (
-                approvedReports.map((report, index) => (
+                approvedReports.map((report: EmissionReport & { companyId?: { companyName?: string; email?: string }; reviewedBy?: { email?: string }; reviewedAt?: string | Date }, index) => {
+                  const reportIdStr = report.reportId ?? report._id ?? '';
+                  const companyName = typeof report.companyId === 'object' && report.companyId !== null
+                    ? (report.companyId as { companyName?: string; email?: string }).companyName ?? (report.companyId as { email?: string }).email ?? ''
+                    : String(report.companyId ?? '');
+                  const approvedDateStr = report.reviewedAt
+                    ? format(new Date(report.reviewedAt), 'MMM dd, yyyy')
+                    : '';
+                  const verifierStr = typeof report.reviewedBy === 'object' && report.reviewedBy !== null
+                    ? (report.reviewedBy as { email?: string }).email ?? ''
+                    : String(report.reviewedBy ?? '');
+                  const txHash = report.blockchainTxHash ?? (report as any).txHash ?? '';
+                  return (
                 <motion.div
-                  key={report.id}
+                  key={report._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
@@ -125,17 +134,17 @@ export default function ApprovedReports() {
                         </div>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <Building className="h-3 w-3" />
-                          {report.company}
+                          {companyName}
                         </p>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                          <span>ID: {report.id}</span>
+                          <span>ID: {reportIdStr}</span>
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            Approved: {report.approvedDate}
+                            Approved: {approvedDateStr}
                           </span>
                           <span>•</span>
-                          <span>By: {report.verifier}</span>
+                          <span>By: {verifierStr}</span>
                         </div>
                       </div>
                     </div>
@@ -146,27 +155,24 @@ export default function ApprovedReports() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="max-w-[120px] truncate font-mono text-xs text-muted-foreground">
-                          {report.txHash}
+                          {txHash}
                         </span>
                         <button
-                          onClick={() => handleCopyHash(report.txHash)}
+                          onClick={() => txHash && handleCopyHash(txHash)}
                           className="rounded p-1 hover:bg-muted"
                         >
-                          {copiedHash === report.txHash ? (
+                          {copiedHash === txHash ? (
                             <Check className="h-3 w-3 text-success" />
                           ) : (
                             <Copy className="h-3 w-3 text-muted-foreground" />
                           )}
                         </button>
-                        <Button variant="ghost" size="sm" className="h-7 gap-1 px-2">
-                          <ExternalLink className="h-3 w-3" />
-                          Verify
-                        </Button>
                       </div>
                     </div>
                   </div>
                 </motion.div>
-              ))
+                  );
+              })
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />

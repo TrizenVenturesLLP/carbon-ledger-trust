@@ -52,15 +52,14 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const user = await login(email, password);
       toast({
         title: "Login Successful",
         description: "Welcome to your dashboard",
       });
       
-      // Navigate based on role
-      const role = selectedRole;
-      if (role === "company") {
+      // Navigate based on actual user role from API (not form selection)
+      if (user.role === "company") {
         navigate("/dashboard/company/reports");
       } else {
         navigate("/dashboard/regulator/reviews");

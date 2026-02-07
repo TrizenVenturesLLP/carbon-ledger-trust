@@ -1,28 +1,52 @@
 import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Contract ABIs (will be generated after compilation)
 let CarbonCreditTokenABI: any[] = [];
 let CarbonCreditRegistryABI: any[] = [];
 
+// ESM: get __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Resolve artifacts dir: try multiple locations (backend/artifacts)
+const getArtifactsDir = (): string => {
+  const candidates = [
+    path.resolve(__dirname, '..', '..', 'artifacts'),
+    path.resolve(process.cwd(), 'artifacts'),
+    path.resolve(process.cwd(), 'backend', 'artifacts'),
+  ];
+  for (const dir of candidates) {
+    const contractsDir = path.join(dir, 'contracts', 'CarbonCreditToken.sol', 'CarbonCreditToken.json');
+    if (fs.existsSync(contractsDir)) return dir;
+  }
+  return path.resolve(process.cwd(), 'artifacts');
+};
+
 // Load ABIs from compiled contracts
 const loadABIs = () => {
   try {
-    const tokenPath = path.join(process.cwd(), 'backend', 'artifacts', 'contracts', 'CarbonCreditToken.sol', 'CarbonCreditToken.json');
-    const registryPath = path.join(process.cwd(), 'backend', 'artifacts', 'contracts', 'CarbonCreditRegistry.sol', 'CarbonCreditRegistry.json');
-    
+    const base = getArtifactsDir();
+    const tokenPath = path.join(base, 'contracts', 'CarbonCreditToken.sol', 'CarbonCreditToken.json');
+    const registryPath = path.join(base, 'contracts', 'CarbonCreditRegistry.sol', 'CarbonCreditRegistry.json');
+
     if (fs.existsSync(tokenPath)) {
       const tokenArtifact = JSON.parse(fs.readFileSync(tokenPath, 'utf-8'));
       CarbonCreditTokenABI = tokenArtifact.abi;
+    } else {
+      console.warn('Token ABI not found at', tokenPath);
     }
-    
+
     if (fs.existsSync(registryPath)) {
       const registryArtifact = JSON.parse(fs.readFileSync(registryPath, 'utf-8'));
       CarbonCreditRegistryABI = registryArtifact.abi;
+    } else {
+      console.warn('Registry ABI not found at', registryPath);
     }
   } catch (error) {
-    console.warn('Could not load contract ABIs. Make sure contracts are compiled.');
+    console.warn('Could not load contract ABIs. Make sure contracts are compiled.', error);
   }
 };
 

@@ -43,7 +43,7 @@ export const approveReport = async (req: AuthRequest, res: Response): Promise<vo
     const { id } = req.params;
     const { issuedCredits, notes } = req.body;
 
-    const report = await EmissionReport.findById(id).populate('companyId', 'walletAddress');
+    const report = await EmissionReport.findById(id).populate('companyId', 'email companyName walletAddress');
 
     if (!report) {
       res.status(404).json({ error: 'Report not found' });
@@ -93,8 +93,13 @@ export const approveReport = async (req: AuthRequest, res: Response): Promise<vo
     report.blockchainTxHash = blockchainTxHash;
     await report.save();
 
+    // Generate unique creditId (required by schema)
+    const creditCount = await CarbonCredit.countDocuments();
+    const creditId = `CC-${new Date().getFullYear()}-${String(creditCount + 1).padStart(3, '0')}`;
+
     // Create carbon credit record
     const credit = await CarbonCredit.create({
+      creditId,
       reportId: report._id,
       companyId: report.companyId,
       amount: creditsToIssue,
@@ -106,8 +111,13 @@ export const approveReport = async (req: AuthRequest, res: Response): Promise<vo
       contractAddress: process.env.CARBON_CREDIT_TOKEN_ADDRESS,
     });
 
+    // Generate unique transactionId (required by schema)
+    const txnCount = await Transaction.countDocuments();
+    const transactionId = `TXN-${new Date().getFullYear()}-${String(txnCount + 1).padStart(3, '0')}`;
+
     // Create transaction record
     await Transaction.create({
+      transactionId,
       type: 'issued',
       toUserId: report.companyId,
       creditId: credit._id,
@@ -117,15 +127,17 @@ export const approveReport = async (req: AuthRequest, res: Response): Promise<vo
       confirmedAt: new Date(),
     });
 
-    // Create audit log
+    // Create audit log (ensure required string fields are never undefined)
+    const companyName = (company && ((company as any).companyName ?? (company as any).email)) || 'Unknown Company';
+    const verifierName = req.user?.email || 'Unknown';
     await AuditLog.create({
       action: 'approved',
       reportId: report._id,
-      reportTitle: report.title,
+      reportTitle: report.title || 'Untitled Report',
       companyId: report.companyId,
-      companyName: (company as any).companyName || company.email,
+      companyName,
       verifierId: req.user?.id as any,
-      verifierName: req.user?.email || 'Unknown',
+      verifierName,
       notes: notes || 'Report approved and credits issued',
       creditsIssued: creditsToIssue,
       previousStatus: 'pending',
@@ -172,17 +184,19 @@ export const rejectReport = async (req: AuthRequest, res: Response): Promise<voi
     report.reviewedBy = req.user?.id as any;
     await report.save();
 
-    // Create audit log
+    // Create audit log (ensure required string fields are never undefined)
     const company = report.companyId as any;
+    const companyName = (company && (company.companyName ?? company.email)) || 'Unknown Company';
+    const verifierName = req.user?.email || 'Unknown';
     await AuditLog.create({
       action: 'rejected',
       reportId: report._id,
-      reportTitle: report.title,
+      reportTitle: report.title || 'Untitled Report',
       companyId: report.companyId,
-      companyName: company.companyName || company.email,
+      companyName,
       verifierId: req.user?.id as any,
-      verifierName: req.user?.email || 'Unknown',
-      notes: notes || rejectionReason,
+      verifierName,
+      notes: notes || rejectionReason || 'Rejected',
       previousStatus: 'pending',
       newStatus: 'rejected',
     });

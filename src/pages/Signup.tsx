@@ -95,16 +95,15 @@ export default function Signup() {
         walletAddress: formData.walletAddress || undefined,
       });
 
-      // Auto login after registration
-      await login(formData.email, formData.password);
+      // Auto login after registration; redirect based on actual user role
+      const user = await login(formData.email, formData.password);
 
       toast({
         title: "Account Created",
         description: "Your account has been created successfully",
       });
 
-      // Navigate based on role
-      if (selectedRole === "company") {
+      if (user.role === "company") {
         navigate("/dashboard/company/reports");
       } else {
         navigate("/dashboard/regulator/reviews");

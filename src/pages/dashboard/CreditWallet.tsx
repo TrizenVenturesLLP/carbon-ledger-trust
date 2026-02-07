@@ -7,7 +7,6 @@ import {
   Lock, 
   Copy, 
   Check, 
-  ExternalLink,
   Search,
   Wallet,
   AlertCircle
@@ -538,12 +537,6 @@ export default function CreditWallet() {
                                 </DialogContent>
                               </Dialog>
                             </div>
-                          )}
-                          {credit.status === "retired" && (
-                            <Button variant="ghost" size="sm" className="gap-1">
-                              <ExternalLink className="h-3 w-3" />
-                              View on Chain
-                            </Button>
                           )}
                         </div>
                       </div>

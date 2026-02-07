@@ -41,8 +41,13 @@ export const submitReport = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    // Generate unique reportId (required by schema)
+    const count = await EmissionReport.countDocuments();
+    const reportId = `RPT-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
+
     // Create report
     const report = await EmissionReport.create({
+      reportId,
       companyId: req.user?.id,
       title,
       type,

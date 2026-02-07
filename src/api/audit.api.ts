@@ -8,11 +8,13 @@ export interface AuditLog {
     reportId: string;
     title: string;
   };
+  reportTitle?: string;
   companyId: {
     _id: string;
     email: string;
     companyName?: string;
   };
+  companyName?: string;
   verifierId: {
     _id: string;
     email: string;

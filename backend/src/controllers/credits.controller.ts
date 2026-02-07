@@ -133,13 +133,24 @@ export const transferCredit = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    // Update credit ownership
+    // Cannot transfer to regulator accounts
+    if (recipientUser.role === 'regulator') {
+      res.status(400).json({ error: 'Cannot transfer credits to a regulator account' });
+      return;
+    }
+
+    // Update credit ownership: new owner holds it as active (so it counts in their balance and they can transfer/retire)
     credit.currentOwner = recipientUser._id as any;
-    credit.status = 'transferred';
+    credit.status = 'active';
     await credit.save();
+
+    // Generate unique transactionId (required by schema)
+    const txnCount = await Transaction.countDocuments();
+    const transactionId = `TXN-${new Date().getFullYear()}-${String(txnCount + 1).padStart(3, '0')}`;
 
     // Create transaction record
     await Transaction.create({
+      transactionId,
       type: 'transferred',
       fromUserId: req.user?.id as any,
       toUserId: recipientUser._id,
@@ -196,8 +207,13 @@ export const retireCredit = async (req: AuthRequest, res: Response): Promise<voi
     credit.blockchainTxHash = blockchainTxHash;
     await credit.save();
 
+    // Generate unique transactionId (required by schema)
+    const txnCount = await Transaction.countDocuments();
+    const transactionId = `TXN-${new Date().getFullYear()}-${String(txnCount + 1).padStart(3, '0')}`;
+
     // Create transaction record
     await Transaction.create({
+      transactionId,
       type: 'retired',
       fromUserId: req.user?.id as any,
       creditId: credit._id,

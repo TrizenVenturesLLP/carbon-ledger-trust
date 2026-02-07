@@ -163,9 +163,24 @@ export default function AuditLog() {
           <CardContent>
             <div className="space-y-4">
               {filteredLogs.length > 0 ? (
-                filteredLogs.map((log, index) => (
+                filteredLogs.map((log: AuditLogType, index: number) => {
+                  const reportIdStr = typeof log.reportId === 'object' && log.reportId !== null
+                    ? (log.reportId as { reportId?: string; title?: string }).reportId ?? (log.reportId as { _id?: string })._id
+                    : String(log.reportId ?? '');
+                  const companyName = log.companyName ?? (typeof log.companyId === 'object' && log.companyId !== null
+                    ? (log.companyId as { companyName?: string; email?: string }).companyName ?? (log.companyId as { email?: string }).email
+                    : '');
+                  const verifierName = log.verifierName ?? (typeof log.verifierId === 'object' && log.verifierId !== null
+                    ? (log.verifierId as { email?: string }).email
+                    : '');
+                  const timestampStr = log.timestamp
+                    ? typeof log.timestamp === 'string'
+                      ? format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm')
+                      : format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm')
+                    : '';
+                  return (
                 <motion.div
-                  key={log.id}
+                  key={log._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
@@ -181,33 +196,36 @@ export default function AuditLog() {
                           <span className={`rounded-full px-2 py-0.5 text-xs font-medium uppercase ${getActionColor(log.action)}`}>
                             {log.action}
                           </span>
-                          <span className="text-sm font-medium text-foreground">{log.reportTitle}</span>
+                          <span className="text-sm font-medium text-foreground">
+                            {typeof log.reportTitle === 'string' ? log.reportTitle : (log.reportId as any)?.title ?? ''}
+                          </span>
                         </div>
-                        <p className="text-sm text-muted-foreground">{log.company}</p>
+                        <p className="text-sm text-muted-foreground">{companyName}</p>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                          <span>Report: {log.reportId}</span>
+                          <span>Report: {reportIdStr}</span>
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3" />
-                            {log.verifier}
+                            {verifierName}
                           </span>
                           <span>•</span>
-                          <span>{log.timestamp}</span>
+                          <span>{timestampStr}</span>
                         </div>
                         <p className="mt-2 text-sm text-muted-foreground italic">
                           "{log.notes}"
                         </p>
                       </div>
                     </div>
-                    {log.credits && (
+                    {log.creditsIssued != null && log.creditsIssued > 0 && (
                       <div className="text-right">
-                        <p className="text-lg font-bold text-success">+{log.credits} tCO₂e</p>
+                        <p className="text-lg font-bold text-success">+{log.creditsIssued} tCO₂e</p>
                         <p className="text-xs text-muted-foreground">Credits Issued</p>
                       </div>
                     )}
                   </div>
                 </motion.div>
-              ))
+                  );
+              })
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />

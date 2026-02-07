@@ -119,136 +119,141 @@ export default function EmissionReports() {
                 Submit New Report
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
+            <DialogContent className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl flex-col overflow-hidden p-4 sm:p-6">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle>Submit Emission Reduction Report</DialogTitle>
                 <DialogDescription>
                   Provide details about your emission reduction project for verification.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSubmitReport} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Report Title</Label>
-                    <Input 
-                      id="title" 
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="e.g., Q1 2024 Emission Reduction" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Report Type</Label>
-                    <Select 
-                      value={formData.type} 
-                      onValueChange={(value) => setFormData({ ...formData, type: value as 'quarterly' | 'project' | 'annual' })}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="quarterly">Quarterly Report</SelectItem>
-                        <SelectItem value="project">Project Report</SelectItem>
-                        <SelectItem value="annual">Annual Report</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="methodology">Methodology</Label>
-                  <Input 
-                    id="methodology" 
-                    value={formData.methodology}
-                    onChange={(e) => setFormData({ ...formData, methodology: e.target.value })}
-                    placeholder="e.g., GHG Protocol Corporate Standard" 
-                    required 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea 
-                    id="description" 
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe the emission reduction activities and methodologies used..."
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="baselineEmissions">Baseline Emissions (tCO₂e)</Label>
-                    <Input 
-                      id="baselineEmissions" 
-                      type="number" 
-                      step="0.01" 
-                      value={formData.baselineEmissions}
-                      onChange={(e) => setFormData({ ...formData, baselineEmissions: e.target.value })}
-                      placeholder="e.g., 500" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reportedEmissions">Reported Emissions (tCO₂e)</Label>
-                    <Input 
-                      id="reportedEmissions" 
-                      type="number" 
-                      step="0.01" 
-                      value={formData.reportedEmissions}
-                      onChange={(e) => setFormData({ ...formData, reportedEmissions: e.target.value })}
-                      placeholder="e.g., 350" 
-                      required 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedCredits">Estimated Credits (tCO₂e)</Label>
-                  <Input 
-                    id="estimatedCredits" 
-                    type="number" 
-                    step="0.01" 
-                    value={formData.estimatedCredits}
-                    onChange={(e) => setFormData({ ...formData, estimatedCredits: e.target.value })}
-                    placeholder="e.g., 150" 
-                    required 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Supporting Documents</Label>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png"
-                    className="hidden"
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      setSelectedFiles(files);
-                    }}
-                  />
-                  <div 
-                    className="rounded-lg border-2 border-dashed border-border p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Drag and drop files here, or click to browse
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      PDF, XLSX, CSV, Images up to 10MB each
-                    </p>
-                    {selectedFiles.length > 0 && (
-                      <div className="mt-4 space-y-1">
-                        {selectedFiles.map((file, idx) => (
-                          <p key={idx} className="text-xs text-muted-foreground">{file.name}</p>
-                        ))}
+              <form onSubmit={handleSubmitReport} className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                  <div className="space-y-4">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Report Title</Label>
+                        <Input 
+                          id="title" 
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="e.g., Q1 2024 Emission Reduction" 
+                          required 
+                        />
                       </div>
-                    )}
+                      <div className="space-y-2">
+                        <Label htmlFor="type">Report Type</Label>
+                        <Select 
+                          value={formData.type} 
+                          onValueChange={(value) => setFormData({ ...formData, type: value as 'quarterly' | 'project' | 'annual' })}
+                          required
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="quarterly">Quarterly Report</SelectItem>
+                            <SelectItem value="project">Project Report</SelectItem>
+                            <SelectItem value="annual">Annual Report</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="methodology">Methodology</Label>
+                      <Input 
+                        id="methodology" 
+                        value={formData.methodology}
+                        onChange={(e) => setFormData({ ...formData, methodology: e.target.value })}
+                        placeholder="e.g., GHG Protocol Corporate Standard" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea 
+                        id="description" 
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Describe the emission reduction activities and methodologies used..."
+                        rows={4}
+                        className="resize-y min-h-[6rem]"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="baselineEmissions">Baseline Emissions (tCO₂e)</Label>
+                        <Input 
+                          id="baselineEmissions" 
+                          type="number" 
+                          step="0.01" 
+                          value={formData.baselineEmissions}
+                          onChange={(e) => setFormData({ ...formData, baselineEmissions: e.target.value })}
+                          placeholder="e.g., 500" 
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reportedEmissions">Reported Emissions (tCO₂e)</Label>
+                        <Input 
+                          id="reportedEmissions" 
+                          type="number" 
+                          step="0.01" 
+                          value={formData.reportedEmissions}
+                          onChange={(e) => setFormData({ ...formData, reportedEmissions: e.target.value })}
+                          placeholder="e.g., 350" 
+                          required 
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="estimatedCredits">Estimated Credits (tCO₂e)</Label>
+                      <Input 
+                        id="estimatedCredits" 
+                        type="number" 
+                        step="0.01" 
+                        value={formData.estimatedCredits}
+                        onChange={(e) => setFormData({ ...formData, estimatedCredits: e.target.value })}
+                        placeholder="e.g., 150" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Supporting Documents</Label>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setSelectedFiles(files);
+                        }}
+                      />
+                      <div 
+                        className="rounded-lg border-2 border-dashed border-border p-4 text-center cursor-pointer hover:border-primary/50 transition-colors sm:p-6"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Drag and drop files here, or click to browse
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PDF, XLSX, CSV, Images up to 10MB each
+                        </p>
+                        {selectedFiles.length > 0 && (
+                          <div className="mt-4 space-y-1">
+                            {selectedFiles.map((file, idx) => (
+                              <p key={idx} className="text-xs text-muted-foreground truncate">{file.name}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex-shrink-0 border-t pt-4 mt-4">
                   <Button type="button" variant="outline" onClick={() => {
                     setNewReportOpen(false);
                     setSelectedFiles([]);
